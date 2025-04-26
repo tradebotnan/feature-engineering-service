@@ -1,0 +1,22 @@
+/.idea/**
+/venv/**
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual Environment
+venv/
+
+# Coverage
+.coverage
+htmlcov/
+
+# Poetry
+poetry.lock
+
+# Others
+*.log
+.env
+.DS_Store
