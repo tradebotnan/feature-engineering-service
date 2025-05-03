@@ -1,18 +1,39 @@
 import pandas as pd
-from app.feature_generator import generate_features
+import pytest
 
-def test_generate_features():
-    data = {
-        'close': [100 + i for i in range(20)]  # Generate 20 increasing prices
+from app.feature.generator import generate_features
+
+@pytest.fixture
+def sample_df():
+    return pd.DataFrame({
+        "timestamp": pd.date_range(start="2024-01-01", periods=10, freq="D"),
+        "open": [100, 101, 102, 103, 104, 105, 106, 107, 108, 109],
+        "high": [102, 103, 104, 105, 106, 107, 108, 109, 110, 111],
+        "low": [98, 99, 100, 101, 102, 103, 104, 105, 106, 107],
+        "close": [101, 102, 103, 104, 105, 106, 107, 108, 109, 110],
+        "volume": [1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900]
+    })
+
+@pytest.fixture
+def test_config():
+    return {
+        "momentum_indicators": {"rsi": {"periods": [5]}},
+        "trend_indicators": {"ema": {"periods": [5]}},
+        "volatility_indicators": {"atr": {"periods": [5]}},
+        "volume_indicators": {"obv": {"enabled": True}},
+        "engineered_features": {"return": {"include": ["return_1d", "log_return"]}},
+        "candle_features": {"patterns": {"enabled": True, "include": ["doji", "engulfing"]}}
     }
-    df = pd.DataFrame(data)
-    df = generate_features(df)
 
-    assert 'rsi_14' in df.columns
-    assert 'ema_10' in df.columns
-    assert 'macd' in df.columns
+def test_generate_features_pattern_detection(sample_df, test_config):
+    df = generate_features(sample_df, test_config)
 
-    # There will be NaN values at the beginning, but after 14 rows, RSI should be valid
-    valid_rsi = df['rsi_14'].dropna()
-    assert not valid_rsi.empty
-    assert valid_rsi.iloc[0] >= 0  # RSI is between 0-100
+    expected = [
+        "rsi_5", "ema_5", "atr_5", "obv", "return_1d", "log_return",
+        "pattern_doji", "pattern_engulfing"
+    ]
+
+    for col in expected:
+        assert col in df.columns, f"Missing expected feature column: {col}"
+
+    assert len(df) > 0

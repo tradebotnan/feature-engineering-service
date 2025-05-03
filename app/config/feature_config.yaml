@@ -1,7 +1,0 @@
-features:
-  ohlcv: true
-  rsi: [14]
-  ema: [10, 50]
-  macd: true
-  lag_features: [1, 2, 5]
-  trend_labeling: true

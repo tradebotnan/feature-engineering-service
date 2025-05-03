@@ -1,0 +1,40 @@
+features:
+  enabled: true
+  version: v1.0
+  asset_class: futures
+
+  price_indicators:
+    # Trend
+    sma: { periods: [5, 10, 20, 50, 100, 200] }
+    ema: { periods: [10, 20, 50, 100] }
+    macd: { enabled: true }
+    trix: { periods: [15] }
+    vortex: { periods: [14] }
+
+    # Momentum
+    rsi: { periods: [14] }
+    roc: { periods: [10] }
+    adx: { periods: [14] }
+    cci: { periods: [14] }
+
+    # Volatility
+    atr: { periods: [14] }
+    bollinger: { periods: [20], stddev: 2 }
+
+  sentiment_analysis:
+    enabled: false
+
+  candle_features:
+    engineered: { include: ["gap_up", "body_size"] }
+
+  engineered_features:
+    return:
+      include: ["return_1d", "log_return"]
+    volatility:
+      windows: [5, 10]
+    trend_strength:
+      periods: [10, 20]
+
+  labels:
+    trend: { horizon: 1 }
+    volatility_regime: { thresholds: [0.01, 0.03] }
