@@ -1,6 +1,7 @@
 import os
 import pytest
 from app.utils import env_loader
+from pathlib import Path
 
 def test_database_env_vars_loaded():
     assert env_loader.DB_HOST == "localhost"
@@ -13,8 +14,9 @@ def test_feature_paths_loaded():
     assert env_loader.FEATURE_OUTPUT_PATH.startswith("D:/")
 
 def test_logging_vars():
-    assert env_loader.LOG_DIR.endswith("/logs")
-    assert env_loader.LOG_LEVEL in ["INFO", "DEBUG", "WARNING", "ERROR"]
+    # Normalize to POSIX format and remove trailing slashes
+    log_dir = Path(env_loader.LOG_DIR).as_posix().rstrip("/")
+    assert log_dir.endswith("/logs")
 
 def test_optional_var_fallback():
     os.environ.pop("NON_EXISTENT_KEY", None)

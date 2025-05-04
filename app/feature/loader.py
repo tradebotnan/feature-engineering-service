@@ -6,7 +6,7 @@ from app.preprocessing.data_preprocessor import preprocess_dataframe
 from app.feature.generator import generate_features
 from app.feature.labeler import apply_labeling_strategy
 from app.feature.writer import write_features, update_feature_status
-from app.utils.env_loader import get_env_variable
+from app.utils.env_loader import get_env_variable, resolve_env_path
 
 logger = get_logger("loader")
 
@@ -32,8 +32,8 @@ def load_and_process(file_path: Path, symbol: str, date: str, data_type: str, co
         if df.empty:
             raise ValueError("Generated feature DataFrame is empty.")
 
-        input_base = Path(get_env_variable("FEATURE_ENGINEERING_INPUT_PATH", "data/filtered"))
-        output_base = Path(get_env_variable("FEATURE_ENGINEERING_OUTPUT_PATH", "data/features"))
+        input_base = Path(resolve_env_path("FEATURE_INPUT_PATH", "data/filtered"))
+        output_base = Path(resolve_env_path("FEATURE_OUTPUT_PATH", "data/features"))
 
         relative_path = file_path.relative_to(input_base)
         output_path = output_base / relative_path

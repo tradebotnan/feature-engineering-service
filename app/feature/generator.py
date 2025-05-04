@@ -1,31 +1,9 @@
 import pandas as pd
-import numpy as np
 
 from app.indicators import momentum, trend, volatility, volume, engineered, candles, options, sentiment
-from app.indicators.candles import add_pattern_features
 from app.utils.logger import get_logger
 
 logger = get_logger("feature_generator")
-
-def add_pattern_features(df: pd.DataFrame, patterns: list) -> pd.DataFrame:
-    df = df.copy()
-
-    if "doji" in patterns:
-        df["pattern_doji"] = np.where(
-            np.abs(df["open"] - df["close"]) <= 0.1 * (df["high"] - df["low"]), 1, 0
-        )
-
-    if "engulfing" in patterns:
-        df["pattern_engulfing"] = 0
-        prev_open = df["open"].shift(1)
-        prev_close = df["close"].shift(1)
-
-        bullish = (prev_close < prev_open) & (df["close"] > df["open"]) & (df["close"] > prev_open) & (df["open"] < prev_close)
-        bearish = (prev_close > prev_open) & (df["close"] < df["open"]) & (df["open"] > prev_close) & (df["close"] < prev_open)
-
-        df.loc[bullish | bearish, "pattern_engulfing"] = 1
-
-    return df
 
 def generate_features(df: pd.DataFrame, config: dict) -> pd.DataFrame:
     try:
@@ -35,7 +13,7 @@ def generate_features(df: pd.DataFrame, config: dict) -> pd.DataFrame:
         patterns_cfg = config.get("candle_features", {}).get("patterns", {})
         if patterns_cfg.get("enabled", False):
             pattern_list = patterns_cfg.get("include", [])
-            df = add_pattern_features(df, pattern_list)
+            df = candles.add_candlestick_features(df, config["candle_features"])
 
         # Technical indicators
         if "momentum_indicators" in config:

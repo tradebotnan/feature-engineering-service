@@ -1,8 +1,8 @@
 import pandas as pd
-
 from app.utils.logger import get_logger
 
 logger = get_logger("indicators_candles")
+
 
 def add_body_size(df: pd.DataFrame) -> pd.DataFrame:
     df["body_size"] = (df["close"] - df["open"]).abs()
@@ -25,7 +25,7 @@ def add_gap_up_down(df: pd.DataFrame) -> pd.DataFrame:
 def add_doji(df: pd.DataFrame, threshold: float = 0.1) -> pd.DataFrame:
     body = (df["close"] - df["open"]).abs()
     range_ = df["high"] - df["low"]
-    df["doji"] = (body / range_) < threshold
+    df["pattern_doji"] = (body / range_ < threshold).astype(int)
     return df
 
 
@@ -35,8 +35,10 @@ def add_engulfing(df: pd.DataFrame) -> pd.DataFrame:
     curr_open = df["open"]
     curr_close = df["close"]
 
-    df["bullish_engulfing"] = (prev_close < prev_open) & (curr_close > curr_open) & (curr_close > prev_open) & (curr_open < prev_close)
-    df["bearish_engulfing"] = (prev_close > prev_open) & (curr_close < curr_open) & (curr_close < prev_open) & (curr_open > prev_close)
+    cond_bull = (prev_close < prev_open) & (curr_close > curr_open) & (curr_close > prev_open) & (curr_open < prev_close)
+    cond_bear = (prev_close > prev_open) & (curr_close < curr_open) & (curr_close < prev_open) & (curr_open > prev_close)
+
+    df["pattern_engulfing"] = (cond_bull | cond_bear).astype(int)
     return df
 
 
@@ -56,12 +58,8 @@ def add_candlestick_features(df: pd.DataFrame, config: dict) -> pd.DataFrame:
 
     return df
 
+
 def add_gap_features(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Adds binary flags for gap up and gap down patterns.
-    A gap up occurs when today's open > yesterday's high.
-    A gap down occurs when today's open < yesterday's low.
-    """
     df = df.copy()
     df["gap_up"] = (df["open"] > df["high"].shift(1)).astype(int)
     df["gap_down"] = (df["open"] < df["low"].shift(1)).astype(int)
@@ -69,16 +67,6 @@ def add_gap_features(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def detect_candlestick_patterns(df: pd.DataFrame, patterns: list[str]) -> pd.DataFrame:
-    """
-    Detect selected candlestick patterns and add binary columns to the DataFrame.
-
-    Args:
-        df (pd.DataFrame): Input OHLC dataframe
-        patterns (list): List of pattern names to detect (e.g., ["doji", "engulfing"])
-
-    Returns:
-        pd.DataFrame: with additional binary columns like "pattern_doji", "pattern_engulfing"
-    """
     df = df.copy()
 
     for pattern in patterns:
@@ -93,39 +81,6 @@ def detect_candlestick_patterns(df: pd.DataFrame, patterns: list[str]) -> pd.Dat
                         df["close"] > prev["open"])
             cond_bear = (prev["close"] > prev["open"]) & (df["close"] < df["open"]) & (df["open"] > prev["close"]) & (
                         df["close"] < prev["open"])
-            df["pattern_engulfing"] = (cond_bull | cond_bear).astype(int)
-
-        # Optional: Add more patterns later
-        # elif pattern.lower() == "hammer": ...
-        # elif pattern.lower() == "shooting_star": ...
-        else:
-            logger.warning(f"Pattern '{pattern}' not supported.")
-
-    return df
-
-def add_pattern_features(df: pd.DataFrame, patterns: list[str]) -> pd.DataFrame:
-    """
-    Adds selected candlestick pattern features to the DataFrame.
-
-    Args:
-        df (pd.DataFrame): Input OHLC dataframe
-        patterns (list): List of pattern names to detect (e.g., ["doji", "engulfing"])
-
-    Returns:
-        pd.DataFrame: with additional binary columns like "pattern_doji", "pattern_engulfing"
-    """
-    df = df.copy()
-
-    for pattern in patterns:
-        if pattern.lower() == "doji":
-            body = (df["close"] - df["open"]).abs()
-            range_ = df["high"] - df["low"]
-            df["pattern_doji"] = ((body / range_) < 0.1).astype(int)
-
-        elif pattern.lower() == "engulfing":
-            prev = df.shift(1)
-            cond_bull = (prev["close"] < prev["open"]) & (df["close"] > df["open"]) & (df["open"] < prev["close"]) & (df["close"] > prev["open"])
-            cond_bear = (prev["close"] > prev["open"]) & (df["close"] < df["open"]) & (df["open"] > prev["close"]) & (df["close"] < prev["open"])
             df["pattern_engulfing"] = (cond_bull | cond_bear).astype(int)
 
         else:

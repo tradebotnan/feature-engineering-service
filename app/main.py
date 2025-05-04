@@ -1,43 +1,50 @@
-import argparse
-from datetime import date
+import os
+from pathlib import Path
+from datetime import datetime, timedelta
 
-from app.utils.env_loader import get_env_variable
-from app.utils.logger import get_logger
 from app.feature.loader import load_and_process
-from app.preprocessing.data_preprocessor import preprocess_dataframe
-from app.feature.generator import generate_features
-from app.feature.labeler import apply_labeling_strategy
-from app.feature.writer import write_features
+from app.utils.env_loader import get_env_variable, load_env_list, resolve_env_path
+from app.utils.logger import get_logger
 
-logger = get_logger("feature_engineering_main")
+logger = get_logger(get_env_variable("MAIN_LOGGER"))
 
+def date_range(start: str, end: str):
+    start_dt = datetime.strptime(start, "%Y-%m-%d")
+    end_dt = datetime.strptime(end, "%Y-%m-%d")
+    while start_dt <= end_dt:
+        yield start_dt.strftime("%Y-%m-%d")
+        start_dt += timedelta(days=1)
 
 def main():
-    parser = argparse.ArgumentParser(description="Feature Engineering CLI")
-    parser.add_argument("--input-dir", required=True)
-    parser.add_argument("--output-dir", required=True)
-    parser.add_argument("--symbols", required=True)
-    parser.add_argument("--start-date", required=True)
-    parser.add_argument("--end-date", required=True)
-    parser.add_argument("--data-type", required=True, choices=["day", "minute", "trades"])
-    args = parser.parse_args()
+    input_dir = resolve_env_path("FEATURE_INPUT_PATH", True, "D:/tradebotnan/data/filtered")
+    output_dir = resolve_env_path("FEATURE_OUTPUT_PATH", True, "D:/tradebotnan/data/features")
 
-    logger.info(f"🔍 Starting Feature Engineering for {args.symbols} from {args.start_date} to {args.end_date} ({args.data_type})")
+    symbols = load_env_list("SYMBOLS")
+    data_types = load_env_list("DATA_TYPES")
+    start_date = get_env_variable("START_DATE")
+    end_date = get_env_variable("END_DATE")
 
-    symbols = args.symbols.split(",")
-    for symbol in symbols:
-        file_path = f"{args.input_dir}/{args.data_type}_{symbol}_{args.start-date}.parquet"
-        logger.info(f"📂 Loading file: {file_path}")
-        df = load_and_process(file_path)
-        df = preprocess_dataframe(df)
-        df = generate_features(df, {"data_type": args.data_type})
-        df = apply_labeling_strategy(df)
+    for data_type in data_types:
+        for symbol in symbols:
+            for date_str in date_range(start_date, end_date):
+                file_path = Path(f"{input_dir}/{data_type}_{symbol}_{date_str}.parquet")
+                if not file_path.exists():
+                    logger.warning(f"⛔ File not found: {file_path}")
+                    continue
 
-        output_path = f"{args.output_dir}/{args.data_type}_{symbol}_{args.start-date}.parquet"
-        write_features(df, output_path)
+                logger.info(f"📂 Processing {symbol} - {date_str} ({data_type})")
+                try:
+                    df = load_and_process(
+                        file_path=file_path,
+                        symbol=symbol,
+                        date=date_str,
+                        data_type=data_type,
+                        config=None  # Optionally load with `load_yaml_config()`
+                    )
+                    logger.info(f"✅ Done: {symbol} - {date_str} ({data_type})")
 
-    logger.info("✅ Feature Engineering CLI run completed successfully.")
-
+                except Exception as e:
+                    logger.error(f"❌ Failed processing {file_path}: {e}")
 
 if __name__ == "__main__":
     main()
