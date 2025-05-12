@@ -1,50 +1,88 @@
-import os
+import time
 from pathlib import Path
-from datetime import datetime, timedelta
+
+from common.db.db_writer import fetch_records
+from common.db.session_manager import init_db_session
+from common.env.env_loader import get_env_variable, load_env_list
+from common.logging.logger import setup_logger
+from common.schema.models import FeatureDispatchLog
+from common.time.date_time import parse_date
+from common.utils.retry_utils import retry
+from sqlalchemy import and_
 
 from app.feature.loader import load_and_process
-from app.utils.env_loader import get_env_variable, load_env_list, resolve_env_path
-from app.utils.logger import get_logger
 
-logger = get_logger(get_env_variable("MAIN_LOGGER"))
+logger = setup_logger()
+SLEEP_INTERVAL = int(get_env_variable("WORKER_SLEEP_INTERVAL", False, "5"))
 
-def date_range(start: str, end: str):
-    start_dt = datetime.strptime(start, "%Y-%m-%d")
-    end_dt = datetime.strptime(end, "%Y-%m-%d")
-    while start_dt <= end_dt:
-        yield start_dt.strftime("%Y-%m-%d")
-        start_dt += timedelta(days=1)
+
+@retry(Exception, tries=3, delay=2, backoff=2)
+def process_job(job):
+    try:
+        symbol = job.symbol
+        date = job.date
+        data = job.data
+        group_key = job.group_key
+        file_path = Path(f"D:\\{str(job.output_path)}")
+
+        logger.info(f"🛠️ Processing feature generation for {symbol} {date} ({data})")
+        load_and_process(job.market, job.asset, data, symbol, str(date), file_path, group_key)
+
+    except Exception as e:
+        logger.error(f"❌ Error processing {job.symbol} {job.date} ({job.data_type}): {e}")
+
 
 def main():
-    input_dir = resolve_env_path("FEATURE_INPUT_PATH", True, "D:/tradebotnan/data/filtered")
-    output_dir = resolve_env_path("FEATURE_OUTPUT_PATH", True, "D:/tradebotnan/data/features")
-
+    init_db_session()
+    markets = load_env_list("MARKETS")
+    assets = load_env_list("ASSETS")
+    datas = load_env_list("DATA_TYPES")
     symbols = load_env_list("SYMBOLS")
-    data_types = load_env_list("DATA_TYPES")
-    start_date = get_env_variable("START_DATE")
-    end_date = get_env_variable("END_DATE")
+    start_date = parse_date(get_env_variable("START_DATE"))
+    end_date = parse_date(get_env_variable("END_DATE"))
 
-    for data_type in data_types:
-        for symbol in symbols:
-            for date_str in date_range(start_date, end_date):
-                file_path = Path(f"{input_dir}/{data_type}_{symbol}_{date_str}.parquet")
-                if not file_path.exists():
-                    logger.warning(f"⛔ File not found: {file_path}")
-                    continue
+    date_filter = None
 
-                logger.info(f"📂 Processing {symbol} - {date_str} ({data_type})")
-                try:
-                    df = load_and_process(
-                        file_path=file_path,
-                        symbol=symbol,
-                        date=date_str,
-                        data_type=data_type,
-                        config=None  # Optionally load with `load_yaml_config()`
-                    )
-                    logger.info(f"✅ Done: {symbol} - {date_str} ({data_type})")
+    if start_date and end_date:
+        if FeatureDispatchLog.data == "trades":
+            date_filter = and_(
+                FeatureDispatchLog.date >= start_date,
+                FeatureDispatchLog.date <= end_date
+            )
+        elif FeatureDispatchLog.data == "minute":
+            date_filter = and_(
+                FeatureDispatchLog.year >= start_date.year,
+                FeatureDispatchLog.year <= end_date.year,
+                FeatureDispatchLog.month >= start_date.month,
+                FeatureDispatchLog.month <= end_date.month,
+            )
+        elif FeatureDispatchLog.data == "day":
+            date_filter = and_(
+                FeatureDispatchLog.year >= start_date.year,
+                FeatureDispatchLog.year <= end_date.year
+            )
 
-                except Exception as e:
-                    logger.error(f"❌ Failed processing {file_path}: {e}")
+    query_filter = and_(
+        FeatureDispatchLog.status == "pending",
+        FeatureDispatchLog.symbol.in_(symbols),
+        FeatureDispatchLog.market.in_(markets),
+        FeatureDispatchLog.asset.in_(assets),
+        FeatureDispatchLog.data.in_(datas),
+    )
+
+    if date_filter:
+        query_filter = and_(query_filter, date_filter)
+
+    while True:
+        jobs = fetch_records(FeatureDispatchLog, query_filter, limit=100)
+        if not jobs:
+            logger.info("🟡 No pending features found. Waiting...")
+            time.sleep(SLEEP_INTERVAL)
+            continue
+
+        for job in jobs:
+            process_job(job)
+
 
 if __name__ == "__main__":
     main()

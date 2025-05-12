@@ -20,7 +20,7 @@ def rich_config():
     return {
         "candle_features": {
             "patterns": {"enabled": True, "include": ["doji", "engulfing"]},
-            "engineered": {"include": ["body_size"]}
+            "engineered.py": {"include": ["body_size"]}
         },
         "momentum_indicators": {
             "sma": {"periods": [5]},

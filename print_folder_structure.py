@@ -49,6 +49,8 @@ EXCLUDE_PATTERNS = [
     "*.log",
     "db.sqlite3",
     "resources/secrets.toml",
+    "print_folder_structure.py",
+    "tests"
 ]
 
 

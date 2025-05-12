@@ -1,8 +1,12 @@
 import pandas as pd
-from app.utils.logger import get_logger
+from common.logging.logger import setup_logger
 
-logger = get_logger("preprocessor")
+logger = setup_logger()
 
+import pandas as pd
+from common.logging.logger import setup_logger
+
+logger = setup_logger()
 
 def preprocess_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     logger.info("🧹 Cleaning and preprocessing data...")
@@ -14,9 +18,14 @@ def preprocess_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     # Normalize column names
     df.columns = [col.lower().strip() for col in df.columns]
 
+    # ✅ New (recommended) → force numeric types
+    numeric_columns = ["open", "high", "low", "close", "volume"]
+    for col in numeric_columns:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+
     # Drop rows with missing essentials
-    required_cols = ["close", "open", "high", "low", "volume"]
-    df = df.dropna(subset=[col for col in required_cols if col in df.columns])
+    df = df.dropna(subset=[col for col in numeric_columns if col in df.columns])
 
     # Format timestamp
     if "timestamp" in df.columns:

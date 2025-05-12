@@ -1,50 +1,53 @@
 from pathlib import Path
 import pandas as pd
 
-from app.utils.logger import get_logger
+from common.config.yaml_loader import load_market_config
+from common.io.path_resolver import resolve_feature_output_path, get_group_key_from_filename
+from common.logging.logger import setup_logger
+from common.schema.enums import MarketType, AssetType, DataType
+from common.time.date_time import parse_date
+
 from app.preprocessing.data_preprocessor import preprocess_dataframe
 from app.feature.generator import generate_features
 from app.feature.labeler import apply_labeling_strategy
 from app.feature.writer import write_features, update_feature_status
-from app.utils.env_loader import get_env_variable, resolve_env_path
+from common.env.env_loader import resolve_env_path, get_env_variable
+from common.utils.retry_utils import retry
 
-logger = get_logger("loader")
+logger = setup_logger()
 
-
-def load_and_process(file_path: Path, symbol: str, date: str, data_type: str, config: dict) -> bool:
+@retry(Exception, tries=3, delay=2, backoff=2)
+def load_and_process(market: str, asset: str, data_type: str, symbol: str, date: str, file_path: Path, group_key: str) -> pd.DataFrame:
     """
     Full pipeline for feature engineering:
-    1. Load filtered Parquet
-    2. Preprocess
-    3. Generate features
-    4. Apply labeling
-    5. Save output
-    6. Log success or failure in feature dispatch table
     """
     try:
         logger.info(f"🛠️ Starting feature generation for {file_path}")
 
         df = pd.read_parquet(file_path)
         df = preprocess_dataframe(df)
-        df = generate_features(df, config)
-        df = apply_labeling_strategy(df)
+        df = generate_features(df, load_market_config(market, asset))
+        df = apply_labeling_strategy(df, load_market_config(market, asset))
 
         if df.empty:
             raise ValueError("Generated feature DataFrame is empty.")
 
-        input_base = Path(resolve_env_path("FEATURE_INPUT_PATH", "data/filtered"))
-        output_base = Path(resolve_env_path("FEATURE_OUTPUT_PATH", "data/features"))
+        input_base = file_path
 
-        relative_path = file_path.relative_to(input_base)
-        output_path = output_base / relative_path
+        output_path = resolve_feature_output_path(MarketType(market), AssetType(asset), DataType(data_type), symbol, get_group_key_from_filename(Path(file_path).stem))
+
+        parquet_path = Path(str(output_path) + ".parquet")
+
         output_path.parent.mkdir(parents=True, exist_ok=True)
+        parquet_path = Path(str(output_path) + ".parquet")
 
-        write_features(df, str(output_path))
-        update_feature_status(symbol, date, data_type, "completed", output_path)
-        logger.info(f"✅ Completed: {symbol} {date} saved to {output_path}")
-        return True
+        write_features(df, str(parquet_path))
+        update_feature_status(symbol, date, data_type, "completed", parquet_path)
+
+        logger.info(f"✅ Completed: {symbol} {date} saved to {parquet_path}")
+        return df
 
     except Exception as e:
         logger.error(f"❌ Feature generation failed for {symbol} {date}: {e}")
         update_feature_status(symbol, date, data_type, "error", "", str(e))
-        return False
+        return df

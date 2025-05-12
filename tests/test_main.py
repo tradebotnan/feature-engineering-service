@@ -9,7 +9,7 @@ def set_env(monkeypatch):
     monkeypatch.setenv("DATA_TYPES", "minute")
     monkeypatch.setenv("START_DATE", "2024-01-01")
     monkeypatch.setenv("END_DATE", "2024-01-01")
-    monkeypatch.setenv("FEATURE_INPUT_PATH", "data/filtered")
+    monkeypatch.setenv("FEATURE_DIR", "data/filtered")
     monkeypatch.setenv("FEATURE_OUTPUT_PATH", "data/features")
     monkeypatch.setenv("MAIN_LOGGER", "preprocessor")
 
