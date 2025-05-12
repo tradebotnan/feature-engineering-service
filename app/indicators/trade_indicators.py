@@ -1,6 +1,8 @@
+# Source file: app\indicators\trade_indicators.py
 # app/indicators/trade_indicators.py
-import pandas as pd
 import numpy as np
+import pandas as pd
+
 
 def add_all_trade_indicators(df: pd.DataFrame, window: int = 5) -> pd.DataFrame:
     """
@@ -29,8 +31,8 @@ def add_all_trade_indicators(df: pd.DataFrame, window: int = 5) -> pd.DataFrame:
     # 🪄 Rolling VWAP over window
     try:
         df["vwap_window"] = (
-            (df["price"] * df["size"]).rolling(window=window).sum() /
-            df["size"].rolling(window=window).sum()
+                (df["price"] * df["size"]).rolling(window=window).sum() /
+                df["size"].rolling(window=window).sum()
         )
     except ZeroDivisionError:
         df["vwap_window"] = np.nan

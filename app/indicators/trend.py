@@ -1,5 +1,7 @@
+# Source file: app\indicators\trend.py
 import pandas as pd
 from ta.trend import SMAIndicator, EMAIndicator, WMAIndicator, MACD, VortexIndicator
+
 
 def add_trend_features(df: pd.DataFrame, config: dict) -> pd.DataFrame:
     df = df.copy()
@@ -40,6 +42,7 @@ def add_trend_features(df: pd.DataFrame, config: dict) -> pd.DataFrame:
         df[f"vortex_neg_{period}"] = vortex.vortex_indicator_neg()
 
     return df
+
 
 def calculate_trix(series: pd.Series, period: int) -> pd.Series:
     """

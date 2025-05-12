@@ -1,8 +1,9 @@
-# tests/conftest.py
+# Source file: tests\conftest.py
 
-import os
-from dotenv import load_dotenv
 from pathlib import Path
+
+from dotenv import load_dotenv
+
 
 def pytest_configure():
     # This runs before any tests

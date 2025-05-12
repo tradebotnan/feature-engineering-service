@@ -1,5 +1,6 @@
-import pandas as pd
+# Source file: app\indicators\volume.py
 import numpy as np
+import pandas as pd
 from ta.volume import OnBalanceVolumeIndicator, MFIIndicator
 
 
@@ -26,6 +27,7 @@ def detect_volume_anomalies(df: pd.DataFrame, threshold: float = 2.0) -> pd.Seri
     zscore = (df['volume'] - mean) / std
     return pd.Series(np.where(np.abs(zscore) > threshold, 1, 0), index=zscore.index)
 
+
 def add_vwap(df: pd.DataFrame) -> pd.DataFrame:
     price = (df["high"] + df["low"] + df["close"]) / 3
     vwap = (price * df["volume"]).cumsum() / df["volume"].cumsum()
@@ -48,6 +50,7 @@ def add_volume_ema(df: pd.DataFrame, period: int) -> pd.DataFrame:
 def add_volume_roc(df: pd.DataFrame, period: int) -> pd.DataFrame:
     df[f"volume_roc_{period}"] = df["volume"].pct_change(periods=period)
     return df
+
 
 def add_volume_features(df: pd.DataFrame, config: dict) -> pd.DataFrame:
     """

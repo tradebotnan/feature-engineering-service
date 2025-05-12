@@ -1,6 +1,7 @@
+# Source file: app\indicators\volatility.py
 import pandas as pd
-import numpy as np
 import ta
+
 
 def add_atr(df: pd.DataFrame, periods: list) -> pd.DataFrame:
     for period in periods:
@@ -39,9 +40,10 @@ def add_volatility_burst(df: pd.DataFrame, zscore_window: int = 20) -> pd.DataFr
     df.drop(columns=["rolling_std"], inplace=True)
     return df
 
+
 import pandas as pd
-import numpy as np
 from ta.volatility import AverageTrueRange, BollingerBands
+
 
 def add_volatility_features(df: pd.DataFrame, config: dict) -> pd.DataFrame:
     df = df.copy()
@@ -62,7 +64,7 @@ def add_volatility_features(df: pd.DataFrame, config: dict) -> pd.DataFrame:
 
     if config.get("zscore", {}).get("enabled", False):
         df["zscore_close"] = (
-            (df["close"] - df["close"].rolling(5).mean()) / df["close"].rolling(5).std()
+                (df["close"] - df["close"].rolling(5).mean()) / df["close"].rolling(5).std()
         )
 
     return df

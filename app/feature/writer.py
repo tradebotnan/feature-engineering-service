@@ -1,11 +1,14 @@
+# Source file: app\feature\writer.py
 from datetime import datetime
 from pathlib import Path
+
 import pandas as pd
-from common.logging.logger import setup_logger
 from common.db.db_writer import update_record
+from common.logging.logger import setup_logger
 from common.schema.models import FeatureDispatchLog
 
 logger = setup_logger()
+
 
 def write_features(df: pd.DataFrame, feature_path: str) -> bool:
     try:
@@ -17,6 +20,7 @@ def write_features(df: pd.DataFrame, feature_path: str) -> bool:
     except Exception as e:
         logger.error(f"❌ Failed to write features to {feature_path}: {e}")
         return False
+
 
 def update_feature_status(*, symbol: str = None, date: str = None, data: str = None,
                           row_id: int = None, status: str = "pending",

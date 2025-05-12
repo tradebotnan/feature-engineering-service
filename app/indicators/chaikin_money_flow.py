@@ -1,4 +1,5 @@
-import pandas as pd
+# Source file: app\indicators\chaikin_money_flow.py
+
 
 def add_chaikin_money_flow(df, config):
     df = df.copy()

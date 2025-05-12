@@ -1,4 +1,5 @@
-import pandas as pd
+# Source file: app\indicators\fundamentals.py
+
 
 def add_fundamental_features(df, config):
     df = df.copy()

@@ -1,4 +1,6 @@
+# Source file: app\indicators\sequence_id.py
 import pandas as pd
+
 
 def add_sequence_id(df: pd.DataFrame) -> pd.DataFrame:
     """

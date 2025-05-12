@@ -1,5 +1,7 @@
+# Source file: app\indicators\momentum.py
 import pandas as pd
 from ta.momentum import RSIIndicator, ROCIndicator, StochasticOscillator
+
 
 def add_momentum_features(df: pd.DataFrame, config: dict) -> pd.DataFrame:
     """

@@ -1,4 +1,5 @@
-import pandas as pd
+# Source file: app\indicators\accumulation_distribution.py
+
 
 def add_accumulation_distribution(df, config):
     df = df.copy()

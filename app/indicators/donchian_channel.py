@@ -1,4 +1,5 @@
-import pandas as pd
+# Source file: app\indicators\donchian_channel.py
+
 
 def add_donchian_channel(df, config):
     df = df.copy()

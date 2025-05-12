@@ -1,5 +1,6 @@
-import pandas as pd
+# Source file: app\indicators\engineered.py
 import numpy as np
+import pandas as pd
 
 
 def add_returns(df: pd.DataFrame, include: list):
@@ -20,7 +21,8 @@ def add_volatility(df: pd.DataFrame, windows: list):
 
 def add_trend_strength(df: pd.DataFrame, periods: list):
     for period in periods:
-        df[f"trend_strength_{period}"] = (df["close"] - df["close"].rolling(period).mean()) / df["close"].rolling(period).std()
+        df[f"trend_strength_{period}"] = (df["close"] - df["close"].rolling(period).mean()) / df["close"].rolling(
+            period).std()
     return df
 
 
@@ -31,6 +33,7 @@ def add_zscore(df: pd.DataFrame, apply_to: list, window: int = 20):
             rolling_std = df[column].rolling(window).std()
             df[f"zscore_{column}"] = (df[column] - rolling_mean) / rolling_std
     return df
+
 
 def add_engineered_features(df: pd.DataFrame, config: dict) -> pd.DataFrame:
     df = df.copy()

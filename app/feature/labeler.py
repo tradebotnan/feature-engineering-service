@@ -1,8 +1,10 @@
-import pandas as pd
+# Source file: app\feature\labeler.py
 import numpy as np
+import pandas as pd
 from common.logging.logger import setup_logger
 
 logger = setup_logger("feature_labeler")
+
 
 def apply_labeling_strategy(df: pd.DataFrame, config: dict) -> pd.DataFrame:
     try:

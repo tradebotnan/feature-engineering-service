@@ -1,3 +1,4 @@
+# Source file: app\indicators\candles.py
 import pandas as pd
 from common.logging.logger import setup_logger
 
@@ -47,9 +48,9 @@ def add_engulfing(df: pd.DataFrame) -> pd.DataFrame:
     curr_close = df["close"]
 
     cond_bull = (prev_close < prev_open) & (curr_close > curr_open) & (curr_close > prev_open) & (
-                curr_open < prev_close)
+            curr_open < prev_close)
     cond_bear = (prev_close > prev_open) & (curr_close < curr_open) & (curr_close < prev_open) & (
-                curr_open > prev_close)
+            curr_open > prev_close)
 
     df["pattern_engulfing"] = (cond_bull | cond_bear).astype(int)
     return df

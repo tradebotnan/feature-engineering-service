@@ -1,4 +1,5 @@
-import pandas as pd
+# Source file: app\indicators\event_flags.py
+
 
 def add_event_flags(df, config):
     df = df.copy()

@@ -1,10 +1,6 @@
+# Source file: app\feature\generator.py
 import pandas as pd
-
-# Core indicators
-from app.indicators import (
-    momentum, trend, volatility, volume,
-    engineered, candles, options, sentiment
-)
+from common.logging.logger import setup_logger
 
 # Newly added stubs
 from app.indicators import (
@@ -12,12 +8,13 @@ from app.indicators import (
     event_flags, fundamentals, accumulation_distribution,
     chaikin_money_flow, ichimoku, donchian_channel
 )
-
+# Core indicators
+from app.indicators import (
+    momentum, trend, volatility, volume,
+    engineered, candles, options
+)
 # ✅ NEW
 from app.indicators import trade_indicators
-
-from common.logging.logger import setup_logger
-
 from indicators.sentiment import add_sentiment_features
 
 logger = setup_logger()
@@ -25,6 +22,7 @@ logger = setup_logger()
 # Try to load TA-Lib
 try:
     import talib
+
     TALIB_AVAILABLE = True
     logger.info("✅ TA-Lib detected, optional TA-Lib support enabled.")
 except ImportError:
@@ -52,7 +50,6 @@ def generate_features(df: pd.DataFrame, config: dict, data: str) -> pd.DataFrame
 
         # ✅ Otherwise → continue normal bar pipeline
         config = config.get('features', {})
-
 
         # =========================
         # Base Candlestick Features
