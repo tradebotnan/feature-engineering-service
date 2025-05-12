@@ -1,20 +1,19 @@
 from pathlib import Path
-import pandas as pd
 
+import pandas as pd
 from common.config.yaml_loader import load_market_config
 from common.io.path_resolver import resolve_feature_output_path, get_group_key_from_filename
 from common.logging.logger import setup_logger
 from common.schema.enums import MarketType, AssetType, DataType
-from common.time.date_time import parse_date
+from common.utils.retry_utils import retry
 
-from app.preprocessing.data_preprocessor import preprocess_dataframe
 from app.feature.generator import generate_features
 from app.feature.labeler import apply_labeling_strategy
 from app.feature.writer import write_features, update_feature_status
-from common.env.env_loader import resolve_env_path, get_env_variable
-from common.utils.retry_utils import retry
+from app.preprocessing.data_preprocessor import preprocess_dataframe
 
 logger = setup_logger()
+
 
 @retry(Exception, tries=3, delay=2, backoff=2)
 def load_and_process(market, asset, data, symbol, date, file_path, row_id) -> pd.DataFrame:
@@ -34,7 +33,8 @@ def load_and_process(market, asset, data, symbol, date, file_path, row_id) -> pd
 
         input_base = file_path
 
-        output_path = resolve_feature_output_path(MarketType(market), AssetType(asset), DataType(data), symbol, get_group_key_from_filename(Path(file_path).stem))
+        output_path = resolve_feature_output_path(MarketType(market), AssetType(asset), DataType(data), symbol,
+                                                  get_group_key_from_filename(Path(file_path).stem))
 
         parquet_path = Path(str(output_path) + ".parquet")
 
@@ -43,7 +43,6 @@ def load_and_process(market, asset, data, symbol, date, file_path, row_id) -> pd
 
         write_features(df, str(parquet_path))
         update_feature_status(row_id=row_id, status="completed", path=str(parquet_path))
-
 
         logger.info(f"✅ Completed: {symbol} {date} saved to {parquet_path}")
         return df
