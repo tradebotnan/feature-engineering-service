@@ -53,6 +53,7 @@ def generate_features(df: pd.DataFrame, config: dict, data: str) -> pd.DataFrame
         # ✅ Otherwise → continue normal bar pipeline
         config = config.get('features', {})
 
+
         # =========================
         # Base Candlestick Features
         # =========================
