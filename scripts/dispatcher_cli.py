@@ -50,13 +50,13 @@ def main():
     for idx, row in manifest.iterrows():
         try:
             symbol = row['symbol']
-            data_type = row['data_type']
+            data = row['data']
             market = row['market']
             date = row['date']
             start_date = str(date)
             end_date = str(date)
 
-            input_path = os.path.join(args.feature_engineering_path, data_type, market, symbol, date.replace('-', '/'))
+            input_path = os.path.join(args.feature_engineering_path, data, market, symbol, date.replace('-', '/'))
 
             # Validate path exists
             if not os.path.exists(input_path):

@@ -18,10 +18,10 @@ def write_features(df: pd.DataFrame, feature_path: str) -> bool:
         logger.error(f"❌ Failed to write features to {feature_path}: {e}")
         return False
 
-def update_feature_status(symbol: str = None, date: str = None, data_type: str = None,
+def update_feature_status(*, symbol: str = None, date: str = None, data: str = None,
                           row_id: int = None, status: str = "pending",
                           path: str = "", error_message: str = ""):
-    filters = {"id": row_id} if row_id else {"symbol": symbol, "date": date, "data_type": data_type}
+    filters = {"id": row_id} if row_id else {"symbol": symbol, "date": date, "data": data}
     updates = {
         "status": status,
         "feature_path": path,

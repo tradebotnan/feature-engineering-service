@@ -17,7 +17,7 @@ from common.utils.retry_utils import retry
 logger = setup_logger()
 
 @retry(Exception, tries=3, delay=2, backoff=2)
-def load_and_process(market: str, asset: str, data_type: str, symbol: str, date: str, file_path: Path, group_key: str) -> pd.DataFrame:
+def load_and_process(market, asset, data, symbol, date, file_path, row_id) -> pd.DataFrame:
     """
     Full pipeline for feature engineering:
     """
@@ -34,20 +34,22 @@ def load_and_process(market: str, asset: str, data_type: str, symbol: str, date:
 
         input_base = file_path
 
-        output_path = resolve_feature_output_path(MarketType(market), AssetType(asset), DataType(data_type), symbol, get_group_key_from_filename(Path(file_path).stem))
+        output_path = resolve_feature_output_path(MarketType(market), AssetType(asset), DataType(data), symbol, get_group_key_from_filename(Path(file_path).stem))
 
         parquet_path = Path(str(output_path) + ".parquet")
 
-        output_path.parent.mkdir(parents=True, exist_ok=True)
+        parquet_path.parent.mkdir(parents=True, exist_ok=True)
         parquet_path = Path(str(output_path) + ".parquet")
 
         write_features(df, str(parquet_path))
-        update_feature_status(symbol, date, data_type, "completed", parquet_path)
+        update_feature_status(row_id=row_id, status="completed", path=str(parquet_path))
+
 
         logger.info(f"✅ Completed: {symbol} {date} saved to {parquet_path}")
         return df
 
     except Exception as e:
         logger.error(f"❌ Feature generation failed for {symbol} {date}: {e}")
-        update_feature_status(symbol, date, data_type, "error", "", str(e))
+        update_feature_status(symbol=symbol, date=date, data=data,
+                              status="error", error_message=str(e))
         return df

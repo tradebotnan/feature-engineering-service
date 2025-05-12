@@ -12,7 +12,7 @@ def test_process_job_success(mock_update, mock_write, mock_label, mock_generate,
     mock_job = MagicMock()
     mock_job.symbol = "AAPL"
     mock_job.date = "2024-01-01"
-    mock_job.data_type = "day"
+    mock_job.data = "day"
     mock_job.filtered_path = "tests/data/filtered/AAPL_day_2024-01-01.parquet"
 
     mock_load.return_value = "df"

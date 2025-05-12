@@ -40,5 +40,5 @@ def test_update_feature_status_not_found(mock_get_db_session):
     mock_session.query().filter_by().first.return_value = None
     mock_get_db_session.return_value = mock_session
 
-    writer.update_feature_status(symbol="AAPL", date="2024-03-01", data_type="minute")
+    writer.update_feature_status(symbol="AAPL", date="2024-03-01", data="minute")
     assert mock_session.commit.called is False  # should never reach commit

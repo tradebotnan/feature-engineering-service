@@ -22,14 +22,14 @@ def process_job(job):
         symbol = job.symbol
         date = job.date
         data = job.data
-        group_key = job.group_key
+        row_id = job.id
         file_path = Path(f"D:\\{str(job.output_path)}")
 
         logger.info(f"🛠️ Processing feature generation for {symbol} {date} ({data})")
-        load_and_process(job.market, job.asset, data, symbol, str(date), file_path, group_key)
+        load_and_process(job.market, job.asset, data, symbol, str(date), file_path, row_id)
 
     except Exception as e:
-        logger.error(f"❌ Error processing {job.symbol} {job.date} ({job.data_type}): {e}")
+        logger.error(f"❌ Error processing {job.symbol} {job.date} ({job.data}): {e}")
 
 
 def main():
