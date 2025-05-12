@@ -42,7 +42,7 @@ def add_all_trade_indicators(df: pd.DataFrame, features: list, window: int = 5) 
         df["trade_count_window"] = df["price"].rolling(window=window).count()
         if pd.api.types.is_datetime64_any_dtype(df["timestamp"]):
             df["seconds"] = (df["timestamp"] - df["timestamp"].iloc[0]).dt.total_seconds()
-            df["seconds"] = df["seconds"].fillna(method="ffill")
+            df["seconds"] = df["seconds"].ffill()
             df["trade_count_per_second"] = df["trade_count_window"] / window
             df.drop(columns=["seconds", "trade_count_window"], inplace=True)
 
@@ -53,7 +53,7 @@ def add_all_trade_indicators(df: pd.DataFrame, features: list, window: int = 5) 
         df["volume_window"] = df["size"].rolling(window=window).sum()
         if pd.api.types.is_datetime64_any_dtype(df["timestamp"]):
             df["seconds"] = (df["timestamp"] - df["timestamp"].iloc[0]).dt.total_seconds()
-            df["seconds"] = df["seconds"].fillna(method="ffill")
+            df["seconds"] = df["seconds"].ffill()
             df["volume_per_second"] = df["volume_window"] / window
             df.drop(columns=["seconds", "volume_window"], inplace=True)
 

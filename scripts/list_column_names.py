@@ -4,9 +4,12 @@ import pandas as pd
 import os
 import pandas as pd
 
+import os
+import pandas as pd
 
 import os
 import pandas as pd
+
 
 def create_sample_parquet(source_file: str, output_file: str):
     try:
@@ -33,6 +36,11 @@ def create_sample_parquet(source_file: str, output_file: str):
         # Save the sample Parquet file
         sample_df.to_parquet(output_file, index=False)
         print(f"Sample Parquet file created: {output_file}")
+
+        # Save the sample as a CSV file
+        csv_file = f"{base}_v{latest_version}.csv"
+        sample_df.to_csv(csv_file, index=False)
+        print(f"Sample CSV file created: {csv_file}")
 
         # Create a .txt file with column names
         columns_file = f"{base}_v{latest_version}_columns.txt"
