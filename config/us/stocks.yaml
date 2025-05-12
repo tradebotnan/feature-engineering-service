@@ -90,3 +90,6 @@ features:
         - tick_imbalance
         - trade_count_per_second
         - volume_per_second
+#event_earnings, event_dividend, event_splits → always false (or default 0)
+#pe_ratio, eps, dividend_yield, revenue_growth → never populated
+#sentiment_score, sentiment_positive, sentiment_negative, sentiment_trend_X → random numbers
