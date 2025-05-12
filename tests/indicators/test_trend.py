@@ -1,1 +1,1 @@
-# Source file: tests\indicators\trend.py
+# Source file: app\indicators\trend.py

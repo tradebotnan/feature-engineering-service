@@ -1,1 +1,1 @@
-# Source file: tests\indicators\trade_indicators.py
+# Source file: app\indicators\trade_indicators.py

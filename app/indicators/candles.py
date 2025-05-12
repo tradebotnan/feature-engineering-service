@@ -57,8 +57,8 @@ def add_engulfing(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def add_candlestick_features(df: pd.DataFrame, config: dict) -> pd.DataFrame:
-    if "engineered.py" in config:
-        feats = config["engineered.py"].get("include", [])
+    if "engineered" in config:
+        feats = config["engineered"].get("include", [])
         if "body_size" in feats:
             df = add_body_size(df)
         if "wick_size" in feats:

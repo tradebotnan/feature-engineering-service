@@ -1,9 +1,19 @@
-# Source file: app\indicators\accumulation_distribution.py
+# app/indicators/accumulation_distribution.py
 
+import pandas as pd
+from ta.volume import AccDistIndexIndicator
 
-def add_accumulation_distribution(df, config):
+def add_accumulation_distribution(df: pd.DataFrame, config: dict) -> pd.DataFrame:
+    """
+    Adds Accumulation/Distribution (A/D) line to the dataframe.
+    """
     df = df.copy()
-    clv = ((df["close"] - df["low"]) - (df["high"] - df["close"])) / (df["high"] - df["low"]).replace(0, 1)
-    df["ad"] = clv * df["volume"]
-    df["accum_dist"] = df["ad"].cumsum()
+    if config.get("enabled", False):
+        ad = AccDistIndexIndicator(
+            high=df["high"],
+            low=df["low"],
+            close=df["close"],
+            volume=df["volume"]
+        )
+        df["accum_dist"] = ad.acc_dist_index()
     return df

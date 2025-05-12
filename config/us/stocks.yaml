@@ -17,8 +17,8 @@ features:
     macd: { enabled: true }
     trix: { periods: [15] }
     vortex: { periods: [14] }
-    donchian_channel: { periods: [20] }
-    ichimoku: { enabled: true }
+    donchian_channel: { periods: [20] } # Missing
+    ichimoku: { enabled: true } # Missing
 
   volatility_indicators:
     atr: { periods: [14] }
@@ -28,26 +28,25 @@ features:
   volume_indicators:
     obv: { enabled: true }
     mfi: { periods: [14] }
-    accumulation_distribution: { enabled: true }
-    chaikin_money_flow: { periods: [20] }
+    accumulation_distribution: { enabled: true } # Missing
+    chaikin_money_flow: { periods: [20] } # Missing
     volume_roc: { periods: [10] }
     vwap: { enabled: true }
     price_vwap_ratio: { enabled: true }
 
   options_indicators:
-    # only for options dataset (safe for stocks to be empty)
     enabled: false
 
   candle_features:
     patterns:
       enabled: true
     include: ["doji", "engulfing"]
-    engineered.py:
+    engineered:
       include: ["body_size", "wick_size", "gap_up", "gap_down"]
 
   sentiment_analysis:
     enabled: true
-    source: [ "news", "social" ]          # optional, for roadmap
+    source: [ "news", "social" ]
     models: [ "finbert" ]
     include_mock_sentiment: true
     sentiment_trend:
@@ -59,26 +58,14 @@ features:
   sequence_id:
     enabled: true
 
-  time_features: {}     # optional: leave empty (still triggers)
+  time_features: {}
 
-  event_flags.py:
+  event_flags:
     enabled: true
-    types: ["earnings", "dividend", "splits"]
+    types: ["earnings", "dividend", "splits"] # Missing
 
-  fundamentals.py:
-    include: ["pe_ratio", "eps", "dividend_yield", "revenue_growth"]
-
-  accumulation_distribution:
-    enabled: true
-
-  chaikin_money_flow:
-    periods: [20]
-
-  ichimoku.py:
-    enabled: true
-
-  donchian_channel:
-    periods: [20]
+  fundamentals:
+    include: ["pe_ratio", "eps", "dividend_yield", "revenue_growth"] # Missing
 
   engineered_features:
     return:
