@@ -71,3 +71,4 @@ features:
     future_return: { horizon: 1 }
     volatility_regime: { thresholds: [0.01, 0.03] }
     trend_class: { classes: ["up", "down", "sideways"] }
+

@@ -1,9 +1,7 @@
 import pandas as pd
 
-def add_event_flags(df: pd.DataFrame, config: dict) -> pd.DataFrame:
-    """
-    Add flags for corporate events like earnings, dividends, splits.
-    """
+def add_event_flags(df, config):
     df = df.copy()
-    # Placeholder for event tagging
+    for event_type in config.get("types", []):
+        df[f"event_{event_type}"] = 0
     return df

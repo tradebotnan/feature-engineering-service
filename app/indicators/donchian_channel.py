@@ -1,9 +1,8 @@
 import pandas as pd
 
-def add_donchian_channel(df: pd.DataFrame, config: dict) -> pd.DataFrame:
-    """
-    Add Donchian Channel upper/lower bands.
-    """
+def add_donchian_channel(df, config):
     df = df.copy()
-    # Placeholder for Donchian channels
+    period = config.get("periods", [20])[0]
+    df["donchian_high"] = df["high"].rolling(window=period).max()
+    df["donchian_low"] = df["low"].rolling(window=period).min()
     return df

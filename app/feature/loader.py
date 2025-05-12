@@ -26,7 +26,7 @@ def load_and_process(market, asset, data, symbol, date, file_path, row_id) -> pd
 
         df = pd.read_parquet(file_path)
         df = preprocess_dataframe(df)
-        df = generate_features(df, load_market_config(market, asset))
+        df = generate_features(df, load_market_config(market, asset), data)
         df = apply_labeling_strategy(df, load_market_config(market, asset))
 
         if df.empty:

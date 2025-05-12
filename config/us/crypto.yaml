@@ -1,10 +1,14 @@
 features:
   enabled: true
-  version: v1.0
+  version: v2.0
   asset_class: crypto
 
-  price_indicators:
-    # Trend
+  momentum_indicators:
+    rsi: { periods: [14] }
+    roc: { periods: [10] }
+    stochastic: { periods: [14] }
+
+  trend_indicators:
     sma: { periods: [5, 10, 20, 50, 100, 200] }
     ema: { periods: [10, 20, 50, 100] }
     macd: { enabled: true }
@@ -12,33 +16,28 @@ features:
     vortex: { periods: [14] }
     donchian_channel: { periods: [20] }
 
-    # Momentum
-    rsi: { periods: [14] }
-    roc: { periods: [10] }
-    stochastic: { periods: [14] }
-
-    # Volatility
+  volatility_indicators:
     atr: { periods: [14] }
     bollinger: { periods: [20], stddev: 2 }
-    volatility_burst: { zscore_window: 20 }
 
   volume_indicators:
     obv: { enabled: true }
     mfi: { periods: [14] }
-    volume_ema: { periods: [10] }
     volume_roc: { periods: [10] }
-    anomalies: { enabled: true }
     vwap: { enabled: true }
     price_vwap_ratio: { enabled: true }
+
+  candle_features:
+    engineered.py:
+      include: ["body_size", "gap_up", "gap_down"]
 
   sentiment_analysis:
     enabled: true
     source: ["social"]
     models: ["vader"]
-    sentiment_change: { enabled: true, window: 5 }
-
-  candle_features:
-    engineered: { include: ["body_size", "gap_up", "gap_down"] }
+    include_mock_sentiment: true
+    sentiment_trend:
+      periods: [3, 5, 10]
 
   engineered_features:
     return:
@@ -54,3 +53,7 @@ features:
     trend: { horizon: 1 }
     return_bin: { bins: [-1.0, 0.0, 0.5, 1.0] }
     future_return: { horizon: 1 }
+
+  trades:
+    indicators:
+      enabled: false

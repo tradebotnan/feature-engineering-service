@@ -13,7 +13,12 @@ from app.indicators import (
     chaikin_money_flow, ichimoku, donchian_channel
 )
 
+# ✅ NEW
+from app.indicators import trade_indicators
+
 from common.logging.logger import setup_logger
+
+from indicators.sentiment import add_sentiment_features
 
 logger = setup_logger()
 
@@ -27,12 +32,25 @@ except ImportError:
     logger.info("ℹ️ TA-Lib not found, using default TA-Library (ta package).")
 
 
-def generate_features(df: pd.DataFrame, config: dict) -> pd.DataFrame:
+def generate_features(df: pd.DataFrame, config: dict, data: str) -> pd.DataFrame:
     """
     Master feature generation function.
     """
     try:
         df = df.copy()
+
+        features_config = config.get('features', {})  # <-- bars config
+
+        if data == "trades":
+            trades_cfg = features_config.get("trades", {}).get("indicators", {})
+            if trades_cfg.get("enabled", False):
+                df = trade_indicators.add_all_trade_indicators(df)
+                logger.info("✅ Trades indicators applied.")
+            else:
+                logger.info("ℹ️ Trades indicators disabled by config.")
+            return df
+
+        # ✅ Otherwise → continue normal bar pipeline
         config = config.get('features', {})
 
         # =========================
@@ -60,12 +78,9 @@ def generate_features(df: pd.DataFrame, config: dict) -> pd.DataFrame:
         if "options_indicators" in config:
             df = options.add_options_features(df, config["options_indicators"])
 
-        if "sentiment_indicators" in config:
-            df = sentiment.add_sentiment_features(df, config["sentiment_indicators"])
+        if "sentiment_analysis" in config:
+            df = add_sentiment_features(df, config.get("sentiment_analysis", {}))
 
-        # ================
-        # New placeholder modules (safely skip if configs not used yet)
-        # ================
         if "cross_features" in config:
             df = crosses.add_cross_features(df, config["cross_features"])
 

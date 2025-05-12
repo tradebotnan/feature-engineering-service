@@ -41,3 +41,7 @@ features:
     trend: { horizon: 1 }
     implied_volatility_bin: { bins: [0.2, 0.4, 0.6] }
     future_return: { horizon: 1 }
+
+  trades:
+    indicators:
+      enabled: false

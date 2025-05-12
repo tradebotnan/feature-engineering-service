@@ -1,9 +1,7 @@
 import pandas as pd
 
-def add_fundamental_features(df: pd.DataFrame, config: dict) -> pd.DataFrame:
-    """
-    Add fundamental ratios/features like PE Ratio, EPS, Revenue Growth.
-    """
+def add_fundamental_features(df, config):
     df = df.copy()
-    # Placeholder for fundamentals
+    for feature in config.get("include", []):
+        df[feature] = 0.0
     return df

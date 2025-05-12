@@ -1,10 +1,16 @@
 features:
   enabled: true
-  version: v1.0
+  version: v2.0
   asset_class: stocks
 
-  price_indicators:
-    # Trend
+  momentum_indicators:
+    rsi: { periods: [14] }
+    roc: { periods: [10] }
+    adx: { periods: [14] }
+    cci: { periods: [14] }
+    stochastic: { periods: [14] }
+
+  trend_indicators:
     sma: { periods: [5, 10, 20, 50, 100, 200, 250] }
     ema: { periods: [10, 20, 50, 100, 200] }
     wma: { periods: [20] }
@@ -14,14 +20,7 @@ features:
     donchian_channel: { periods: [20] }
     ichimoku: { enabled: true }
 
-    # Momentum
-    rsi: { periods: [14] }
-    roc: { periods: [10] }
-    adx: { periods: [14] }
-    cci: { periods: [14] }
-    stochastic: { periods: [14] }
-
-    # Volatility
+  volatility_indicators:
     atr: { periods: [14] }
     bollinger: { periods: [20], stddev: 2 }
     true_range_pct: { periods: [14] }
@@ -35,22 +34,51 @@ features:
     vwap: { enabled: true }
     price_vwap_ratio: { enabled: true }
 
-  fundamentals:
-    include: ["pe_ratio", "eps", "dividend_yield", "revenue_growth"]
+  options_indicators:
+    # only for options dataset (safe for stocks to be empty)
+    enabled: false
+
+  candle_features:
+    patterns:
+      enabled: true
+    include: ["doji", "engulfing"]
+    engineered.py:
+      include: ["body_size", "wick_size", "gap_up", "gap_down"]
 
   sentiment_analysis:
     enabled: true
-    source: ["news"]
-    models: ["finbert"]
+    source: [ "news", "social" ]          # optional, for roadmap
+    models: [ "finbert" ]
+    include_mock_sentiment: true
+    sentiment_trend:
+      periods: [3, 5, 10]
 
-  event_flags:
+  cross_features:
+    include: ["ema_10_vs_ema_50", "sma_20_vs_sma_50"]
+
+  sequence_id:
+    enabled: true
+
+  time_features: {}     # optional: leave empty (still triggers)
+
+  event_flags.py:
     enabled: true
     types: ["earnings", "dividend", "splits"]
 
-  candle_features:
-    patterns: { enabled: true }
-    include: ["doji", "engulfing"]
-    engineered: { include: ["body_size", "wick_size", "gap_up", "gap_down"] }
+  fundamentals.py:
+    include: ["pe_ratio", "eps", "dividend_yield", "revenue_growth"]
+
+  accumulation_distribution:
+    enabled: true
+
+  chaikin_money_flow:
+    periods: [20]
+
+  ichimoku.py:
+    enabled: true
+
+  donchian_channel:
+    periods: [20]
 
   engineered_features:
     return:
@@ -61,12 +89,17 @@ features:
       periods: [10, 20]
     zscore:
       apply_to: ["close", "rsi_14"]
-    crosses:
-      include: ["ema_10_vs_ema_50", "sma_20_vs_sma_50"]
-    sequence_id:
-      enabled: true
 
   labels:
     trend: { horizon: 1 }
     return_bin: { bins: [-1.0, 0.0, 0.5, 1.0] }
     future_return: { horizon: 1 }
+
+  trades:
+    indicators:
+      enabled: true
+      features:
+        - micro_price
+        - tick_imbalance
+        - trade_count_per_second
+        - volume_per_second

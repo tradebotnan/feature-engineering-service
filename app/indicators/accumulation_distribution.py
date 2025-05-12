@@ -1,9 +1,8 @@
 import pandas as pd
 
-def add_accumulation_distribution(df: pd.DataFrame, config: dict) -> pd.DataFrame:
-    """
-    Calculate Accumulation/Distribution indicator.
-    """
+def add_accumulation_distribution(df, config):
     df = df.copy()
-    # Placeholder for accumulation/distribution calculation
+    clv = ((df["close"] - df["low"]) - (df["high"] - df["close"])) / (df["high"] - df["low"]).replace(0, 1)
+    df["ad"] = clv * df["volume"]
+    df["accum_dist"] = df["ad"].cumsum()
     return df
