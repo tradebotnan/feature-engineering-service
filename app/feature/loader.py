@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pandas as pd
 from common.config.yaml_loader import load_market_config
+from common.env.env_loader import get_env_variable
 from common.io.path_resolver import resolve_feature_output_path, get_group_key_from_filename
 from common.logging.logger import setup_logger
 from common.schema.enums import MarketType, AssetType, DataType
@@ -41,9 +42,10 @@ def load_and_process(market, asset, data, symbol, date, file_path, row_id) -> pd
 
         parquet_path.parent.mkdir(parents=True, exist_ok=True)
         parquet_path = Path(str(output_path) + ".parquet")
+        output_path = str(parquet_path).replace(str(Path(get_env_variable("BASE_DIR")).resolve()), "")
 
         write_features(df, str(parquet_path))
-        update_feature_status(row_id=row_id, status="completed", path=str(parquet_path))
+        update_feature_status(row_id=row_id, status="completed", path=output_path)
 
         logger.info(f"✅ Completed: {symbol} {date} saved to {parquet_path}")
         return df
