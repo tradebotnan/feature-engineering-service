@@ -99,7 +99,7 @@ def generate_features(df: pd.DataFrame, config: dict, data: str) -> pd.DataFrame
         if "chaikin_money_flow" in features_config:
             df = chaikin_money_flow.add_chaikin_money_flow(df, features_config["chaikin_money_flow"])
 
-        if "ichimoku" in features_config:
+        if "ichimoku" in features_config and data=="day":
             df = ichimoku.add_ichimoku_features(df, features_config["ichimoku"])
 
         if "donchian_channel" in features_config:
@@ -111,7 +111,29 @@ def generate_features(df: pd.DataFrame, config: dict, data: str) -> pd.DataFrame
         if "engineered_features" in features_config:
             df = engineered.add_engineered_features(df, features_config["engineered_features"])
 
+        import os
+
+        # ✅ Detect rows with any NaN values
+        rows_with_nan = df[df.isna().any(axis=1)]
+
+        # ✅ Log and save them if any exist
+        if not rows_with_nan.empty:
+            logger.warning(f"🚨 {len(rows_with_nan)} rows will be dropped due to NaNs.")
+
+            # Save to CSV for inspection
+            output_dir = "D:/data/debug_nan_records"
+            os.makedirs(output_dir, exist_ok=True)
+            output_file = os.path.join(output_dir, f"dropped_nan_rows_{data}.csv")
+            rows_with_nan.to_csv(output_file, index=False)
+            logger.info(f"📝 Dropped rows saved to: {output_file}")
+
+            # Also log individual rows for traceability
+            for idx, row in rows_with_nan.iterrows():
+                logger.debug(f"Dropping row index {idx}: {row.to_dict()}")
+
+        # ✅ Drop the rows and reset index
         df = df.dropna().reset_index(drop=True)
+
         logger.info(f"✅ Features generated: {list(df.columns)}")
         return df
 

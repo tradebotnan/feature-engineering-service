@@ -15,6 +15,9 @@ def write_features(df: pd.DataFrame, feature_path: str) -> bool:
         path = Path(feature_path)
         path.parent.mkdir(parents=True, exist_ok=True)
         df.to_parquet(path, index=False)
+             # ✅ safest way to convert parquet → csv path
+        new_path = path.with_suffix(".csv")
+        df.to_csv(new_path, index=False)
         logger.info(f"✅ Features written to {feature_path}")
         return True
     except Exception as e:
@@ -30,6 +33,6 @@ def update_feature_status(*, symbol: str = None, date: str = None, data: str = N
         "status": status,
         "feature_path": path,
         "error_message": None if error_message in [None, "none", "None", ""] else error_message,
-        "updated_ts": datetime.utcnow()
+        "updated_ts": datetime.now()
     }
     return update_record(FeatureDispatchLog, filters, updates)

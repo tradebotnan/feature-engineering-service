@@ -30,7 +30,7 @@ def preprocess_dataframe(df: pd.DataFrame) -> pd.DataFrame:
 
     # Format timestamp
     if "timestamp" in df.columns:
-        df["timestamp"] = pd.to_datetime(df["timestamp"], utc=True)
+        df["timestamp"] = pd.to_datetime(df["timestamp"]).dt.tz_convert("America/New_York")
         df = df.sort_values("timestamp")
 
     logger.info("✅ Data cleaning completed.")

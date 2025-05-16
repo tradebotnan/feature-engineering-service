@@ -16,7 +16,7 @@ from app.feature.writer import write_features, update_feature_status
 from app.preprocessing.data_preprocessor import preprocess_dataframe
 
 # ✅ NEW: import stitcher
-from app.utils.file_stitcher import stitch_with_previous
+from app.utils.file_stitcher import stitch_with_previous_and_next
 
 logger = setup_logger()
 
@@ -30,15 +30,37 @@ def load_and_process(market, asset, data, symbol, date, file_path, row_id, all_f
         logger.info(f"🛠️ Starting feature generation for {file_path}")
 
         df = pd.read_parquet(file_path)
+        df["timestamp"] = pd.to_datetime(df["timestamp"], utc=True)
+        df["timestamp"] = df["timestamp"].dt.tz_convert("America/New_York")
         df = df.sort_values("timestamp").reset_index(drop=True)
 
         # ✅ Optional: Stitch previous file (only if all_files provided)
         if all_files:
-            df = stitch_with_previous(df, Path(file_path), all_files, data_type=data)
+            df = stitch_with_previous_and_next(df, Path(file_path), all_files, data_type=data)
 
         df = preprocess_dataframe(df)
         df = generate_features(df, load_market_config(market, asset), data)
         df = apply_labeling_strategy(df, load_market_config(market, asset))
+
+        # ✅ NEW BLOCK
+        if hasattr(df, "attrs") and "current_file_min_ts" in df.attrs:
+            min_ts = pd.to_datetime(df.attrs["current_file_min_ts"], utc=True).tz_convert("America/New_York")
+            max_ts = pd.to_datetime(df.attrs["current_file_max_ts"], utc=True).tz_convert("America/New_York")
+
+            original_count = len(df)
+
+            # Convert timestamp once and correctly
+            df["timestamp"] = pd.to_datetime(df["timestamp"].astype("int64"), unit="ns", utc=True)
+            df["timestamp"] = df["timestamp"].dt.tz_convert("America/New_York")
+
+            # Trim by range
+            df = df[(df["timestamp"] >= min_ts) & (df["timestamp"] <= max_ts)].reset_index(drop=True)
+
+            trimmed_count = original_count - len(df)
+
+            logger.info(
+                f"✅ Trimmed stitched file to original time range ({min_ts} → {max_ts}), removed {trimmed_count} buffer rows."
+            )
 
         if df.empty:
             raise ValueError("Generated feature DataFrame is empty.")
