@@ -17,8 +17,8 @@ features:
     macd: { enabled: true }
     trix: { periods: [15] }
     vortex: { periods: [14] }
-    donchian_channel: { periods: [20] } # Missing
-    ichimoku: { enabled: true } # Missing
+    donchian_channel: { periods: [20] }
+    ichimoku: { enabled: true }
 
   volatility_indicators:
     atr: { periods: [14] }
@@ -28,8 +28,8 @@ features:
   volume_indicators:
     obv: { enabled: true }
     mfi: { periods: [14] }
-    accumulation_distribution: { enabled: true } # Missing
-    chaikin_money_flow: { periods: [20] } # Missing
+    accumulation_distribution: { enabled: true }
+    chaikin_money_flow: { periods: [20] }
     volume_roc: { periods: [10] }
     vwap: { enabled: true }
     price_vwap_ratio: { enabled: true }

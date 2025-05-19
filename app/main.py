@@ -3,6 +3,7 @@
 import time
 from pathlib import Path
 
+import pandas as pd
 from common.db.db_writer import fetch_records
 from common.db.session_manager import init_db_session
 from common.env.env_loader import get_env_variable, load_env_list
@@ -36,11 +37,6 @@ def process_job(job, all_files=None):
 
     except Exception as e:
         logger.error(f"❌ Error processing {job.symbol} {job.date} ({job.data}): {e}")
-
-
-# ✅ Replacement for main.py
-from pathlib import Path
-import pandas as pd
 
 
 def get_all_files(base_dir: Path, market: str, asset: str, data_type: str, symbol: str) -> list[Path]:
@@ -124,6 +120,7 @@ def main():
             base_dir = Path(get_env_variable("BASE_DIR")).joinpath(get_env_variable("FILTERED_DIR"))
             all_files = get_all_files(base_dir, job.market, job.asset, job.data, job.symbol)
             process_job(job, all_files=all_files)
+
 
 if __name__ == "__main__":
     main()

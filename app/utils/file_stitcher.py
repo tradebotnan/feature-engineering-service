@@ -3,6 +3,8 @@
 import pandas as pd
 from pathlib import Path
 from typing import List, Optional
+
+from common.io.parquet_utils import read_parquet_to_df
 from common.logging.logger import setup_logger
 
 logger = setup_logger()
@@ -41,7 +43,7 @@ def stitch_with_previous_and_next(df: pd.DataFrame, current_file: Path, all_file
         prev_file = all_files_sorted[i]
         if prev_file.exists():
             try:
-                prev_df = pd.read_parquet(prev_file)
+                prev_df = read_parquet_to_df(prev_file)
                 if not prev_df.empty:
                     take_rows = min(rows_needed, len(prev_df))
                     rows_to_append = prev_df.tail(take_rows)
@@ -63,7 +65,7 @@ def stitch_with_previous_and_next(df: pd.DataFrame, current_file: Path, all_file
         next_file = all_files_sorted[i]
         if next_file.exists():
             try:
-                next_df = pd.read_parquet(next_file)
+                next_df = read_parquet_to_df(next_file)
                 if not next_df.empty:
                     take_rows = min(rows_needed, len(next_df))
                     rows_to_append = next_df.head(take_rows)
@@ -81,8 +83,8 @@ def stitch_with_previous_and_next(df: pd.DataFrame, current_file: Path, all_file
     stitched_df = pd.concat(stitched_parts, ignore_index=True)
 
     # Store min/max timestamps for reference
-    stitched_df.attrs["current_file_min_ts"] = df["timestamp"].min().isoformat()
-    stitched_df.attrs["current_file_max_ts"] = df["timestamp"].max().isoformat()
+    stitched_df.attrs["current_file_min_ts"] = df["timestamp"].min()
+    stitched_df.attrs["current_file_max_ts"] = df["timestamp"].max()
 
 
     logger.info(

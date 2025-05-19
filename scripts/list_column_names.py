@@ -1,4 +1,6 @@
 import os
+from pathlib import Path
+
 import pandas as pd
 
 import os
@@ -9,11 +11,12 @@ import pandas as pd
 
 import os
 import pandas as pd
+from common.io.parquet_utils import read_parquet_to_df
 
 
 def create_sample_parquet(source_file: str, output_file: str):
     try:
-        df = pd.read_parquet(source_file)
+        df = read_parquet_to_df(Path(source_file))
         sample_df = df.head(1)
 
         base, ext = os.path.splitext(output_file)
@@ -26,7 +29,7 @@ def create_sample_parquet(source_file: str, output_file: str):
             latest_version += 1
 
         if os.path.exists(latest_file):
-            existing_df = pd.read_parquet(latest_file)
+            existing_df = read_parquet_to_df(Path(latest_file))
             if list(existing_df.columns) == list(sample_df.columns):
                 print(f"File already exists with the same columns: {latest_file}")
                 return
