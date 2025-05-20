@@ -33,4 +33,5 @@ def apply_labeling_strategy(df: pd.DataFrame, config: dict) -> pd.DataFrame:
 
     except Exception as e:
         logger.error(f"❌ Labeling failed: {e}")
+        logger.error("Traceback:", exc_info=True)
         return df

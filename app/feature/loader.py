@@ -1,7 +1,6 @@
 # Source file: app/feature/loader.py
 
 from pathlib import Path
-
 import pandas as pd
 from common.config.yaml_loader import load_market_config
 from common.env.env_loader import get_env_variable
@@ -22,65 +21,34 @@ logger = setup_logger()
 
 
 @retry(Exception, tries=3, delay=2, backoff=2)
-def load_and_process(market, asset, data, symbol, date, file_path, row_id, all_files=None) -> pd.DataFrame:
-    """
-    Full pipeline for feature engineering.
-    If all_files is provided, stitch previous file rows for continuity.
-    """
+def load_and_process(market, asset, data, symbol, date, file_path, row_id) -> pd.DataFrame:
     try:
         logger.info(f"🛠️ Starting feature generation for {file_path}")
-
         df = read_parquet_to_df(file_path)
-        # Ensure the 'timestamp' column is in datetime format
-        # logger.info(
-        #     f"Before conversion, 'timestamp' column format: {df['timestamp'].head()}, dtype: {df['timestamp'].dtype}")
+
+        # Ensure timestamps are valid and sorted
         df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ns", utc=True, errors="coerce")
+        df = df.dropna(subset=["timestamp"]).sort_values("timestamp").reset_index(drop=True)
 
-        df = df.sort_values("timestamp").reset_index(drop=True)
+        # Stitch buffer if needed
+        df = stitch_with_previous_and_next(df, Path(file_path), data=data)
 
-        # ✅ Optional: Stitch previous file (only if all_files provided)
-        if all_files:
-            df = stitch_with_previous_and_next(df, Path(file_path), all_files, data_type=data)
-
-        # ✅ Clean + technical preparation
+        # Enrichment, cleaning, feature & label generation
         df = generate_enrichment_overlay(df, market, asset, symbol)
         df = preprocess_dataframe(df)
         df = generate_features(df, load_market_config(market, asset), data)
         df = apply_labeling_strategy(df, load_market_config(market, asset))
 
-        # ✅ NEW BLOCK
-        if hasattr(df, "attrs") and "current_file_min_ts" in df.attrs:
-            min_ts = pd.to_datetime(df.attrs["current_file_min_ts"], utc=True)
-            max_ts = pd.to_datetime(df.attrs["current_file_max_ts"], utc=True)
-
-            original_count = len(df)
-
-            # Ensure the 'timestamp' column is in datetime format
-            df["timestamp"] = pd.to_datetime(df["timestamp"], utc=True, errors="coerce")
-
-            # Drop rows with invalid timestamps
-            df = df.dropna(subset=["timestamp"]).reset_index(drop=True)
-
-            # Validate min_ts and max_ts
-            if min_ts > max_ts:
-                raise ValueError(f"Invalid range: min_ts ({min_ts}) is greater than max_ts ({max_ts})")
-
-            # Filter rows within the range
-            df = df[(df["timestamp"] >= min_ts) & (df["timestamp"] <= max_ts)].reset_index(drop=True)
-            trimmed_count = original_count - len(df)
-
-            logger.info(
-                f"✅ Trimmed stitched file to original time range ({min_ts} → {max_ts}), removed {trimmed_count} buffer rows.")
+        # Trim to file-specific timestamp range
+        df = trim_to_original_time_range(df)
 
         if df.empty:
-            raise ValueError("Generated feature DataFrame is empty.")
-
-        # ✅ Output path resolution
+            raise ValueError("❌ Generated DataFrame is empty after trimming.")
+        # Resolve final output path and write result
         output_path = resolve_feature_output_path(
             MarketType(market), AssetType(asset), DataType(data),
             symbol, get_group_key_from_filename(Path(file_path).stem)
         )
-
         parquet_path = Path(str(output_path) + ".parquet")
         parquet_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -89,19 +57,30 @@ def load_and_process(market, asset, data, symbol, date, file_path, row_id, all_f
         relative_output_path = str(parquet_path).replace(
             str(Path(get_env_variable("BASE_DIR")).resolve()), ""
         )
-        if date in [None, "None", ""]:
-            date = None
-        elif isinstance(date, str):
-            date = pd.to_datetime(date).date()
 
         update_feature_status(row_id=row_id, status="completed", path=relative_output_path)
 
-        logger.info(f"✅ Completed: {symbol} {date} saved to {parquet_path}")
+        logger.info(f"✅ Completed: {symbol} → {parquet_path}")
         return df
 
     except Exception as e:
         logger.error(f"❌ Feature generation failed for {symbol} {date}: {e}")
         logger.error("Traceback:", exc_info=True)
-        update_feature_status(symbol=symbol, date=date, data=data,
-                              status="error", error_message=str(e))
+        update_feature_status(symbol=symbol, date=date, data=data, status="error", error_message=str(e))
+        return pd.DataFrame()  # Return empty to signal failure downstream
+
+
+def trim_to_original_time_range(df: pd.DataFrame) -> pd.DataFrame:
+    if not hasattr(df, "attrs") or "current_file_min_ts" not in df.attrs:
         return df
+
+    min_ts = pd.to_datetime(df.attrs["current_file_min_ts"], utc=True)
+    max_ts = pd.to_datetime(df.attrs["current_file_max_ts"], utc=True)
+
+    if min_ts > max_ts:
+        raise ValueError(f"Invalid timestamp range: {min_ts} > {max_ts}")
+
+    original_count = len(df)
+    df = df[(df["timestamp"] >= min_ts) & (df["timestamp"] <= max_ts)].reset_index(drop=True)
+    logger.info(f"✅ Trimmed to range {min_ts} → {max_ts}, removed {original_count - len(df)} rows")
+    return df

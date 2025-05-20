@@ -23,6 +23,7 @@ def write_features(df: pd.DataFrame, feature_path: str) -> bool:
         return True
     except Exception as e:
         logger.error(f"❌ Failed to write features to {feature_path}: {e}")
+        logger.error("Traceback:", exc_info=True)
         return False
 
 

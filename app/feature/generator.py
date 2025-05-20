@@ -141,4 +141,5 @@ def generate_features(df: pd.DataFrame, config: dict, data: str) -> pd.DataFrame
 
     except Exception as e:
         logger.error(f"❌ Error generating features: {e}")
+        logger.error("Traceback:", exc_info=True)
         return df
