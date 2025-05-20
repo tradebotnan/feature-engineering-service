@@ -75,9 +75,6 @@ def generate_features(df: pd.DataFrame, config: dict, data: str) -> pd.DataFrame
         if "options_indicators" in features_config:
             df = options.add_options_features(df, features_config["options_indicators"])
 
-        if "sentiment_analysis" in features_config:
-            df = add_sentiment_features(df, features_config.get("sentiment_analysis", {}))
-
         if "cross_features" in features_config:
             df = crosses.add_cross_features(df, features_config["cross_features"])
 
@@ -86,12 +83,6 @@ def generate_features(df: pd.DataFrame, config: dict, data: str) -> pd.DataFrame
 
         if "time_features" in features_config:
             df = time_features.add_time_features(df, features_config["time_features"])
-
-        if "event_flags" in features_config:
-            df = event_flags.add_event_flags(df, features_config["event_flags"])
-
-        if "fundamentals" in features_config:
-            df = fundamentals.add_fundamental_features(df, features_config["fundamentals"])
 
         if "accumulation_distribution" in features_config:
             df = accumulation_distribution.add_accumulation_distribution(df,
@@ -105,6 +96,15 @@ def generate_features(df: pd.DataFrame, config: dict, data: str) -> pd.DataFrame
 
         if "donchian_channel" in features_config:
             df = donchian_channel.add_donchian_channel(df, features_config["donchian_channel"])
+
+        # if "sentiment_analysis" in features_config:
+        #     df = add_sentiment_features(df, features_config.get("sentiment_analysis", {}))
+        #
+        # if "event_flags" in features_config:
+        #     df = event_flags.add_event_flags(df, features_config["event_flags"])
+        #
+        # if "fundamentals" in features_config:
+        #     df = fundamentals.add_fundamental_features(df, features_config["fundamentals"])
 
         # =====================
         # ✅ Final engineered features
