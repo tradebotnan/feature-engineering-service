@@ -1,4 +1,5 @@
 # app/feature/generator.py
+import os
 
 import pandas as pd
 from common.logging.logger import setup_logger
@@ -111,7 +112,9 @@ def generate_features(df: pd.DataFrame, config: dict, data: str) -> pd.DataFrame
         if "engineered_features" in features_config:
             df = engineered.add_engineered_features(df, features_config["engineered_features"])
 
-        import os
+
+        required_columns = ["symbol", "open", "high", "low", "close", "volume", "timestamp"]
+        rows_with_nan = df[df[required_columns].isnull().any(axis=1)]
 
         # ✅ Detect rows with any NaN values
         rows_with_nan = df[df.isna().any(axis=1)]
@@ -132,7 +135,8 @@ def generate_features(df: pd.DataFrame, config: dict, data: str) -> pd.DataFrame
                 logger.debug(f"Dropping row index {idx}: {row.to_dict()}")
 
         # ✅ Drop the rows and reset index
-        df = df.dropna().reset_index(drop=True)
+        df = df.dropna(subset=required_columns).reset_index(drop=True)
+
 
         logger.info(f"✅ Features generated: {list(df.columns)}")
         return df

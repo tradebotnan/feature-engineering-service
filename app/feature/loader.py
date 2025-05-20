@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import pandas as pd
+from common.config.yaml_loader import load_market_config
 from common.env.env_loader import get_env_variable
 from common.io.parquet_utils import read_parquet_to_df
 from common.io.path_resolver import resolve_feature_output_path, get_group_key_from_filename
@@ -15,6 +16,9 @@ from app.enrichment.generate_enrichment_overlay import generate_enrichment_overl
 from app.feature.writer import write_features, update_feature_status
 # ✅ NEW: import stitcher
 from app.utils.file_stitcher import stitch_with_previous_and_next
+from feature.generator import generate_features
+from feature.labeler import apply_labeling_strategy
+from preprocessing.data_preprocessor import preprocess_dataframe
 
 logger = setup_logger()
 
@@ -42,9 +46,9 @@ def load_and_process(market, asset, data, symbol, date, file_path, row_id, all_f
 
         # ✅ Clean + technical preparation
         df = generate_enrichment_overlay(df, market, asset, symbol)
-        # df = preprocess_dataframe(df)
-        # df = generate_features(df, load_market_config(market, asset), data)
-        # df = apply_labeling_strategy(df, load_market_config(market, asset))
+        df = preprocess_dataframe(df)
+        df = generate_features(df, load_market_config(market, asset), data)
+        df = apply_labeling_strategy(df, load_market_config(market, asset))
 
         # ✅ NEW BLOCK
         if hasattr(df, "attrs") and "current_file_min_ts" in df.attrs:

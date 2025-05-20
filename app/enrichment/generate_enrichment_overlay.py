@@ -156,11 +156,13 @@ def enrich_with_fundamentals(df, path):
             return df
 
         fin = read_parquet_to_df(path)
+        if fin is None or fin.empty:
+            return df
+
         fin = fin.sort_values("end_date")
         fin["end_date"] = pd.to_datetime(fin["end_date"], errors="coerce")
         fin["report_date"] = fin["end_date"].dt.date
 
-        # Forward fill from last known fundamental
         df["pe_ratio"] = np.nan
         df["eps"] = np.nan
         df["dividend_yield"] = np.nan
@@ -176,17 +178,50 @@ def enrich_with_fundamentals(df, path):
             valid_rows = fin[fin["report_date"] <= d]
             if not valid_rows.empty:
                 latest = valid_rows.iloc[-1]
-                df.at[i, "pe_ratio"] = latest.get("pe_ratio")
-                df.at[i, "eps"] = latest.get("diluted_earnings_per_share", latest.get("basic_earnings_per_share"))
-                df.at[i, "dividend_yield"] = latest.get("dividend_yield")
-                df.at[i, "has_fundamentals"] = 1
 
+                # EPS
+                eps = latest.get("diluted_earnings_per_share") or latest.get("basic_earnings_per_share")
+                df.at[i, "eps"] = eps
+
+                # P/E Ratio = close / EPS
+                price = df.at[i, "close"]
+                if pd.notnull(price) and pd.notnull(eps) and eps != 0:
+                    df.at[i, "pe_ratio"] = price / eps
+
+                # Revenue Growth
                 if last_row is not None:
-                    growth = (latest.get("revenues", 0) - last_row.get("revenues", 0)) / last_row.get("revenues", 1)
-                    df.at[i, "revenue_growth"] = growth
-                    df.at[i, "fundamental_gap_days"] = (latest["report_date"] - last_date).days
+                    try:
+                        prev_revenue = last_row.get("revenues", 1)
+                        growth = (latest.get("revenues", 0) - prev_revenue) / prev_revenue
+                        df.at[i, "revenue_growth"] = growth
+                        df.at[i, "fundamental_gap_days"] = (latest["report_date"] - last_date).days
+                    except Exception as e:
+                        logger.warning(f"⚠️ Revenue growth calc failed: {e}")
                 last_row = latest
                 last_date = latest["report_date"]
+
+                # # ✅ Dividend Yield = (dividends / shares) / close
+                # dividends = latest.get("common_stock_dividends")
+                # shares = latest.get("basic_average_shares") or latest.get("diluted_average_shares")
+                # price = df.at[i, "close"]
+                #
+                # try:
+                #     # Convert to numeric safely
+                #     dividends = float(dividends) if pd.notnull(dividends) else None
+                #     shares = float(shares) if pd.notnull(shares) else None
+                #     price = float(price) if pd.notnull(price) else None
+                #
+                #     if dividends is not None and shares and price and shares != 0 and price != 0:
+                #         per_share = dividends / shares
+                #         df.at[i, "dividend_yield"] = per_share / price
+                #     else:
+                #         logger.debug(
+                #             f"Dividend yield skipped at {d} — missing or zero: div={dividends}, shares={shares}, price={price}"
+                #         )
+                # except Exception as e:
+                #     logger.warning(f"⚠️ Dividend yield calc failed at {d}: {e}")
+
+                df.at[i, "has_fundamentals"] = 1
 
                 # Reporting lag
                 filed = latest.get("filed_date") or latest.get("filing_date")
@@ -199,7 +234,7 @@ def enrich_with_fundamentals(df, path):
                 df.at[i, "financials_stale_flag"] = 1 if stale_days > 90 else 0
 
         return df
+
     except Exception as e:
-        logger.exception(f"<UNK> Failed to enrich with splits from {path}: {e}")
-        logger.error("Traceback", exc_info=True)
+        logger.exception(f"❌ Failed to enrich with fundamentals from {path}: {e}")
         raise
