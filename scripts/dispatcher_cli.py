@@ -1,12 +1,11 @@
 import argparse
-import pandas as pd
-import subprocess
 import os
-import logging
+import subprocess
 
-# Setup logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s:%(message)s')
-logger = logging.getLogger(__name__)
+import pandas as pd
+from common.logging.logger import setup_logger
+
+logger = setup_logger()
 
 
 def run_feature_engineering(input_path, output_dir, symbol, start_date, end_date):

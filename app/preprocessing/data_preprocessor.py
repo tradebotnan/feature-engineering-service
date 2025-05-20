@@ -1,7 +1,4 @@
 # Source file: app\preprocessing\data_preprocessor.py
-from common.logging.logger import setup_logger
-
-logger = setup_logger()
 
 import pandas as pd
 from common.logging.logger import setup_logger

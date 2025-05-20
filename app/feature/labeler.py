@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from common.logging.logger import setup_logger
 
-logger = setup_logger("feature_labeler")
+logger = setup_logger()
 
 
 def apply_labeling_strategy(df: pd.DataFrame, config: dict) -> pd.DataFrame:
