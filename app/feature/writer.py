@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pandas as pd
 from common.db.db_writer import update_record
+from common.io.parquet_utils import save_parquet
 from common.logging.logger import setup_logger
 from common.schema.models import FeatureDispatchLog
 
@@ -14,7 +15,7 @@ def write_features(df: pd.DataFrame, feature_path: str) -> bool:
     try:
         path = Path(feature_path)
         path.parent.mkdir(parents=True, exist_ok=True)
-        df.to_parquet(path, index=False)
+        save_parquet(df, path)
              # ✅ safest way to convert parquet → csv path
         new_path = path.with_suffix(".csv")
         df.to_csv(new_path, index=False)

@@ -8,12 +8,16 @@ from common.io.parquet_utils import read_parquet_to_df
 
 
 def generate_enrichment_overlay(df: pd.DataFrame, market, asset, symbol: str) -> pd.DataFrame:
+    preserved_attrs = df.attrs.copy()
     reference_dir = Path(get_env_variable("BASE_DIR")).joinpath(get_env_variable("ENRICHMENT_DIR"))
 
-    # df = enrich_with_dividends(df, reference_dir / "dividends" / market / asset / symbol / f"{symbol}_dividends.parquet")
+    df = enrich_with_dividends(df, reference_dir / "dividends" / market / asset / symbol / f"{symbol}_dividends.parquet")
     df = enrich_with_splits(df, reference_dir / "splits" / market / asset / symbol / f"{symbol}_splits.parquet")
     # df = enrich_with_events(df, reference_dir / "events" / market / asset / symbol / f"{symbol}_events.parquet")
     # df = enrich_with_fundamentals(df, reference_dir / "financials" / market / asset / symbol / f"{symbol}_financials.parquet")
+
+    # 🔁 Restore attrs to prevent loss
+    df.attrs.update(preserved_attrs)
 
     return df
 
@@ -38,7 +42,7 @@ def enrich_with_dividends(df, path):
         dividends["ex_date"] = pd.to_datetime(dividends["ex_dividend_date"]).dt.tz_localize("UTC").dt.date
 
         df["timestamp"] = pd.to_datetime(df["timestamp"], utc=True, errors="coerce")
-        df["date"] = df["timestamp"].dt.tz_convert("America/New_York").dt.tz_localize(None).dt.date
+        df["date"] = df["timestamp"].dt.date
 
         df["is_dividend_day"] = df["date"].isin(dividends["ex_date"]).astype(int)
         df = df.merge(dividends[["ex_date", "cash_amount"]], how="left", left_on="date", right_on="ex_date")
@@ -73,16 +77,29 @@ def enrich_with_dividends(df, path):
 
 
 def enrich_with_splits(df, path):
-    if not path.exists():
+    try:
+        if not path.exists():
+            return df
+
+        splits = read_parquet_to_df(path)
+        df["timestamp"] = pd.to_datetime(df["timestamp"], utc=True, errors="coerce")
+        df["date"] = df["timestamp"].dt.date
+        splits["split_ratio"] = splits["split_from"] / splits["split_to"]
+
+        df["is_split_day"] = df["date"].isin(splits["execution_date"])
+        df = df.merge(
+            splits[["execution_date", "split_ratio"]],
+            how="left",
+            left_on="date",
+            right_on="execution_date"
+        )
+        df["is_split_day"] = df["is_split_day"].fillna(False).astype(int)
+        df = df.drop(columns=["date"])
+
+    except Exception as e:
+        logger.exception(f"<UNK> Failed to enrich with splits from {path}: {e}")
+        logger.error("Traceback:", exc_info=True)
         return df
-
-    splits = pd.read_csv(path, parse_dates=["execution_date"])
-    splits["split_date"] = splits["execution_date"].dt.date
-    splits["split_ratio"] = splits["split_from"] / splits["split_to"]
-
-    df["is_split_day"] = df["date"].isin(splits["split_date"]).astype(int)
-    df = df.merge(splits[["split_date", "split_ratio"]], how="left", left_on="date", right_on="split_date")
-
     return df
 
 def enrich_with_events(df, path):

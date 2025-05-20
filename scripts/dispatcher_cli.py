@@ -24,6 +24,7 @@ def run_feature_engineering(input_path, output_dir, symbol, start_date, end_date
         logger.info(f"Success: {symbol} {start_date}")
     except subprocess.CalledProcessError as e:
         logger.error(f"Failed Feature Engineering for {symbol} {start_date}: {e}")
+        logger.error("Traceback:", exc_info=True)
 
 
 def main():
@@ -41,9 +42,11 @@ def main():
             manifest = pd.read_parquet(args.manifest)
         else:
             logger.error("Unsupported manifest file type. Use CSV or Parquet.")
+            logger.error("Traceback:", exc_info=True)
             return
     except Exception as e:
         logger.error(f"Error loading manifest file: {e}")
+        logger.error("Traceback:", exc_info=True)
         return
 
     # Dispatch each file
@@ -68,6 +71,7 @@ def main():
 
         except Exception as e:
             logger.error(f"Error dispatching file idx {idx}: {e}")
+            logger.error("Traceback:", exc_info=True)
 
 
 if __name__ == "__main__":

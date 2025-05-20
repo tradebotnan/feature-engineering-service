@@ -28,7 +28,7 @@ def process_job(job, all_files=None):
         row_id = job.id
         file_path = Path(f"D:\\{str(job.output_path)}")
 
-        logger.info(f"🛠️ Processing feature generation for {symbol} {date} ({data})")
+        logger.info(f"🛠️ Processing feature generation for {symbol} ({data})")
         load_and_process(
             job.market, job.asset, data,
             symbol, str(date), file_path,
@@ -36,7 +36,8 @@ def process_job(job, all_files=None):
         )
 
     except Exception as e:
-        logger.error(f"❌ Error processing {job.symbol} {job.date} ({job.data}): {e}")
+        logger.error(f"❌ Error processing {job.symbol} ({job.data}): {e}")
+        logger.error("Traceback:", exc_info=True)
 
 
 def get_all_files(base_dir: Path, market: str, asset: str, data_type: str, symbol: str) -> list[Path]:
