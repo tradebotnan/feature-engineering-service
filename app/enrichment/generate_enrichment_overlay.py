@@ -81,26 +81,42 @@ def enrich_with_splits(df, path):
         if not path.exists():
             return df
 
-        splits = read_parquet_to_df(path)
-        df["timestamp"] = pd.to_datetime(df["timestamp"], utc=True, errors="coerce")
-        df["date"] = df["timestamp"].dt.date
-        splits["split_ratio"] = splits["split_from"] / splits["split_to"]
+        # Load and prepare splits
+        splits = read_parquet_to_df(path) if path.suffix == ".parquet" else pd.read_csv(path)
+        splits["execution_date"] = pd.to_datetime(splits["execution_date"]).dt.date  # ✅ ensure date type
 
+        # Prepare main DataFrame
+        df["timestamp"] = pd.to_datetime(df["timestamp"], utc=True, errors="coerce")
+        df["date"] = df["timestamp"].dt.date  # ✅ convert to datetime.date
+
+        # Confirm values match
+        match_debug = set(df["date"]).intersection(set(splits["execution_date"]))
+        if not match_debug:
+            logger.warning("⚠️ No matching dates found between df['date'] and splits['execution_date']")
+
+        # Add is_split_day flag
         df["is_split_day"] = df["date"].isin(splits["execution_date"])
+
+        # Merge in split_ratio
         df = df.merge(
             splits[["execution_date", "split_ratio"]],
             how="left",
             left_on="date",
             right_on="execution_date"
         )
+
         df["is_split_day"] = df["is_split_day"].fillna(False).astype(int)
-        df = df.drop(columns=["date"])
+        df["split_ratio"] = df["split_ratio"].where(pd.notnull(df["split_ratio"]), None)
+
+        df = df.drop(columns=["date", "execution_date"])
+
+        return df
 
     except Exception as e:
-        logger.exception(f"<UNK> Failed to enrich with splits from {path}: {e}")
-        logger.error("Traceback:", exc_info=True)
+        logger.exception(f"❌ Failed to enrich with splits from {path}: {e}")
         return df
-    return df
+
+
 
 def enrich_with_events(df, path):
     if not path.exists():
