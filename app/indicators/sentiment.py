@@ -1,7 +1,8 @@
 # app/indicators/sentiment.py
 
-import pandas as pd
 import numpy as np
+import pandas as pd
+
 
 def add_sentiment_features(df: pd.DataFrame, config: dict) -> pd.DataFrame:
     """

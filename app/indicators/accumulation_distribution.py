@@ -3,6 +3,7 @@
 import pandas as pd
 from ta.volume import AccDistIndexIndicator
 
+
 def add_accumulation_distribution(df: pd.DataFrame, config: dict) -> pd.DataFrame:
     """
     Adds Accumulation/Distribution (A/D) line to the dataframe.

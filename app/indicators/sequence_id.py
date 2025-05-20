@@ -2,6 +2,7 @@
 
 import pandas as pd
 
+
 def add_sequence_id(df: pd.DataFrame) -> pd.DataFrame:
     """
     Adds a monotonically increasing sequence id (useful for some ML models).

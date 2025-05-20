@@ -1,8 +1,9 @@
 # Source file: app/enrichment/generate_enrichment_overlay.py
 
 from pathlib import Path
-import pandas as pd
+
 import numpy as np
+import pandas as pd
 from common.env.env_loader import get_env_variable
 from common.io.parquet_utils import read_parquet_to_df
 
@@ -14,7 +15,8 @@ def generate_enrichment_overlay(df: pd.DataFrame, market, asset, symbol: str) ->
     df["timestamp"] = pd.to_datetime(df["timestamp"], utc=True, errors="coerce")
     df["date"] = df["timestamp"].dt.date  # ✅ convert to datetime.date
 
-    df = enrich_with_dividends(df, reference_dir / "dividends" / market / asset / symbol / f"{symbol}_dividends.parquet")
+    df = enrich_with_dividends(df,
+                               reference_dir / "dividends" / market / asset / symbol / f"{symbol}_dividends.parquet")
     df = enrich_with_splits(df, reference_dir / "splits" / market / asset / symbol / f"{symbol}_splits.parquet")
     df = enrich_with_events(df, reference_dir / "events" / market / asset / symbol / f"{symbol}_events.parquet")
     # df = enrich_with_fundamentals(df, reference_dir / "financials" / market / asset / symbol / f"{symbol}_financials.parquet")
@@ -24,11 +26,11 @@ def generate_enrichment_overlay(df: pd.DataFrame, market, asset, symbol: str) ->
 
     return df
 
+
 from common.logging.logger import setup_logger
 
 logger = setup_logger()
 
-import os
 
 def enrich_with_dividends(df, path):
     try:
@@ -110,9 +112,7 @@ def enrich_with_splits(df, path):
         return df
 
 
-
 def enrich_with_events(df, path):
-
     try:
         if not path.exists():
             return df
@@ -121,8 +121,10 @@ def enrich_with_events(df, path):
         events["event_date"] = pd.to_datetime(events["date"]).dt.date
 
         df["has_event"] = df["date"].isin(events["event_date"]).astype(int)
-        df["has_ticker_change"] = df["date"].isin(events.loc[events["type"] == "ticker_change", "event_date"]).astype(int)
-        df["has_merger_or_acquisition"] = df["date"].isin(events.loc[events["type"].isin(["merger", "acquisition"]), "event_date"]).astype(int)
+        df["has_ticker_change"] = df["date"].isin(events.loc[events["type"] == "ticker_change", "event_date"]).astype(
+            int)
+        df["has_merger_or_acquisition"] = df["date"].isin(
+            events.loc[events["type"].isin(["merger", "acquisition"]), "event_date"]).astype(int)
         df["has_name_change"] = df["date"].isin(events.loc[events["type"] == "name_change", "event_date"]).astype(int)
 
         # Days since last event
@@ -140,6 +142,7 @@ def enrich_with_events(df, path):
         logger.exception(f"❌ Failed to enrich with splits from {path}: {e}")
         logger.error("Traceback", exc_info=True)
         return df
+
 
 def enrich_with_fundamentals(df, path):
     if not path.exists():

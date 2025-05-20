@@ -2,6 +2,7 @@
 
 import pandas as pd
 
+
 def add_event_flags(df: pd.DataFrame, config: dict) -> pd.DataFrame:
     """
     Adds event flags for corporate actions.

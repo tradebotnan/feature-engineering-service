@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 
+
 def add_all_trade_indicators(df: pd.DataFrame, features: list, window: int = 5) -> pd.DataFrame:
     """
     Adds selected trades-specific indicators based on features list.

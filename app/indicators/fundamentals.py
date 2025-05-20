@@ -1,7 +1,8 @@
 # app/indicators/fundamentals.py
 
-import pandas as pd
 import numpy as np
+import pandas as pd
+
 
 def add_fundamental_features(df: pd.DataFrame, config: dict) -> pd.DataFrame:
     """

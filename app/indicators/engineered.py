@@ -1,9 +1,10 @@
 # app/indicators/engineered.py
-import pandas as pd
 import numpy as np
+import pandas as pd
 from common.logging.logger import setup_logger
 
 logger = setup_logger()
+
 
 def add_engineered_features(df: pd.DataFrame, config: dict) -> pd.DataFrame:
     df = df.copy()

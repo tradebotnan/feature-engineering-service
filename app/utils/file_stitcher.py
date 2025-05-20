@@ -1,9 +1,5 @@
 # app/utils/file_stitcher.py
 
-import pandas as pd
-from pathlib import Path
-from typing import List, Optional
-
 from common.io.parquet_utils import read_parquet_to_df
 from common.logging.logger import setup_logger
 
@@ -13,7 +9,9 @@ from pathlib import Path
 from typing import List
 import pandas as pd
 
-def stitch_with_previous_and_next(df: pd.DataFrame, current_file: Path, all_files: List[Path], data_type: str) -> pd.DataFrame:
+
+def stitch_with_previous_and_next(df: pd.DataFrame, current_file: Path, all_files: List[Path],
+                                  data_type: str) -> pd.DataFrame:
     """
     Stitch previous and next files to current file for continuity.
     - previous: add last N rows from older files for rolling indicators
@@ -85,7 +83,6 @@ def stitch_with_previous_and_next(df: pd.DataFrame, current_file: Path, all_file
     # Store min/max timestamps for reference
     stitched_df.attrs["current_file_min_ts"] = df["timestamp"].min()
     stitched_df.attrs["current_file_max_ts"] = df["timestamp"].max()
-
 
     logger.info(
         f"✅ Stitch complete for {current_file.name}: "

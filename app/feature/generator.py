@@ -3,19 +3,17 @@
 import pandas as pd
 from common.logging.logger import setup_logger
 
-# Core indicators
-from app.indicators import (
-    momentum, trend, volatility, volume,
-    engineered, candles, options
-)
-
 # Newly added stubs
 from app.indicators import (
     crosses, sequence_id, time_features,
     event_flags, fundamentals, accumulation_distribution,
     chaikin_money_flow, ichimoku, donchian_channel
 )
-
+# Core indicators
+from app.indicators import (
+    momentum, trend, volatility, volume,
+    engineered, candles, options
+)
 # ✅ NEW trades module
 from app.indicators import trade_indicators
 from indicators.sentiment import add_sentiment_features
@@ -25,6 +23,7 @@ logger = setup_logger()
 # Try to load TA-Lib
 try:
     import talib
+
     TALIB_AVAILABLE = True
     logger.info("✅ TA-Lib detected, optional TA-Lib support enabled.")
 except ImportError:
@@ -94,12 +93,13 @@ def generate_features(df: pd.DataFrame, config: dict, data: str) -> pd.DataFrame
             df = fundamentals.add_fundamental_features(df, features_config["fundamentals"])
 
         if "accumulation_distribution" in features_config:
-            df = accumulation_distribution.add_accumulation_distribution(df, features_config["accumulation_distribution"])
+            df = accumulation_distribution.add_accumulation_distribution(df,
+                                                                         features_config["accumulation_distribution"])
 
         if "chaikin_money_flow" in features_config:
             df = chaikin_money_flow.add_chaikin_money_flow(df, features_config["chaikin_money_flow"])
 
-        if "ichimoku" in features_config and data=="day":
+        if "ichimoku" in features_config and data == "day":
             df = ichimoku.add_ichimoku_features(df, features_config["ichimoku"])
 
         if "donchian_channel" in features_config:

@@ -2,6 +2,7 @@
 
 import pandas as pd
 
+
 def add_time_features(df: pd.DataFrame, config: dict = None) -> pd.DataFrame:
     """
     Adds basic datetime decomposition features.

@@ -1,7 +1,8 @@
 # app/indicators/chaikin_money_flow.py
 
-import pandas as pd
 import numpy as np
+import pandas as pd
+
 
 def add_chaikin_money_flow(df: pd.DataFrame, config: dict) -> pd.DataFrame:
     """

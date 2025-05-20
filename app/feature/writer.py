@@ -16,7 +16,7 @@ def write_features(df: pd.DataFrame, feature_path: str) -> bool:
         path = Path(feature_path)
         path.parent.mkdir(parents=True, exist_ok=True)
         save_parquet(df, path)
-             # ✅ safest way to convert parquet → csv path
+        # ✅ safest way to convert parquet → csv path
         new_path = path.with_suffix(".csv")
         df.to_csv(new_path, index=False)
         logger.info(f"✅ Features written to {feature_path}")
