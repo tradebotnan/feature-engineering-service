@@ -6,25 +6,31 @@ import numpy as np
 import pandas as pd
 from common.env.env_loader import get_env_variable
 from common.io.parquet_utils import read_parquet_to_df
+from sqlalchemy.sql.coercions import expect
 
 
 def generate_enrichment_overlay(df: pd.DataFrame, market, asset, symbol: str) -> pd.DataFrame:
-    preserved_attrs = df.attrs.copy()
-    reference_dir = Path(get_env_variable("BASE_DIR")).joinpath(get_env_variable("ENRICHMENT_DIR"))
-    # Prepare main DataFrame
-    df["timestamp"] = pd.to_datetime(df["timestamp"], utc=True, errors="coerce")
-    df["date"] = df["timestamp"].dt.date  # ✅ convert to datetime.date
+    try:
+        preserved_attrs = df.attrs.copy()
+        reference_dir = Path(get_env_variable("BASE_DIR")).joinpath(get_env_variable("ENRICHMENT_DIR"))
+        # Prepare main DataFrame
+        df["timestamp"] = pd.to_datetime(df["timestamp"], utc=True, errors="coerce")
+        df["date"] = df["timestamp"].dt.date  # ✅ convert to datetime.date
 
-    df = enrich_with_dividends(df,
-                               reference_dir / "dividends" / market / asset / symbol / f"{symbol}_dividends.parquet")
-    df = enrich_with_splits(df, reference_dir / "splits" / market / asset / symbol / f"{symbol}_splits.parquet")
-    df = enrich_with_events(df, reference_dir / "events" / market / asset / symbol / f"{symbol}_events.parquet")
-    # df = enrich_with_fundamentals(df, reference_dir / "financials" / market / asset / symbol / f"{symbol}_financials.parquet")
+        df = enrich_with_dividends(df,
+                                   reference_dir / "dividends" / market / asset / symbol / f"{symbol}_dividends.parquet")
+        df = enrich_with_splits(df, reference_dir / "splits" / market / asset / symbol / f"{symbol}_splits.parquet")
+        df = enrich_with_events(df, reference_dir / "events" / market / asset / symbol / f"{symbol}_events.parquet")
+        df = enrich_with_fundamentals(df,
+                                      reference_dir / "financials" / market / asset / symbol / f"{symbol}_financials.parquet")
 
-    # 🔁 Restore attrs to prevent loss
-    df.attrs.update(preserved_attrs)
+        # 🔁 Restore attrs to prevent loss
+        df.attrs.update(preserved_attrs)
 
-    return df
+        return df
+    except Exception as e:
+        logger.error("Traceback", exc_info=True)
+        raise e
 
 
 from common.logging.logger import setup_logger
@@ -145,49 +151,55 @@ def enrich_with_events(df, path):
 
 
 def enrich_with_fundamentals(df, path):
-    if not path.exists():
+    try:
+        if not path.exists():
+            return df
+
+        fin = read_parquet_to_df(path)
+        fin = fin.sort_values("end_date")
+        fin["end_date"] = pd.to_datetime(fin["end_date"], errors="coerce")
+        fin["report_date"] = fin["end_date"].dt.date
+
+        # Forward fill from last known fundamental
+        df["pe_ratio"] = np.nan
+        df["eps"] = np.nan
+        df["dividend_yield"] = np.nan
+        df["revenue_growth"] = np.nan
+        df["has_fundamentals"] = 0
+        df["fundamental_gap_days"] = np.nan
+        df["has_reporting_lag"] = 0
+        df["financials_stale_flag"] = 0
+
+        last_row = None
+        last_date = None
+        for i, d in enumerate(df["date"]):
+            valid_rows = fin[fin["report_date"] <= d]
+            if not valid_rows.empty:
+                latest = valid_rows.iloc[-1]
+                df.at[i, "pe_ratio"] = latest.get("pe_ratio")
+                df.at[i, "eps"] = latest.get("diluted_earnings_per_share", latest.get("basic_earnings_per_share"))
+                df.at[i, "dividend_yield"] = latest.get("dividend_yield")
+                df.at[i, "has_fundamentals"] = 1
+
+                if last_row is not None:
+                    growth = (latest.get("revenues", 0) - last_row.get("revenues", 0)) / last_row.get("revenues", 1)
+                    df.at[i, "revenue_growth"] = growth
+                    df.at[i, "fundamental_gap_days"] = (latest["report_date"] - last_date).days
+                last_row = latest
+                last_date = latest["report_date"]
+
+                # Reporting lag
+                filed = latest.get("filed_date") or latest.get("filing_date")
+                if filed:
+                    lag = (pd.to_datetime(filed).date() - latest["report_date"]).days
+                    df.at[i, "has_reporting_lag"] = 1 if lag > 30 else 0
+
+                # Stale check
+                stale_days = (d - latest["report_date"]).days
+                df.at[i, "financials_stale_flag"] = 1 if stale_days > 90 else 0
+
         return df
-
-    fin = pd.read_csv(path, parse_dates=["end_date"])
-    fin = fin.sort_values("end_date")
-    fin["report_date"] = fin["end_date"].dt.date
-
-    # Forward fill from last known fundamental
-    df["pe_ratio"] = np.nan
-    df["eps"] = np.nan
-    df["dividend_yield"] = np.nan
-    df["revenue_growth"] = np.nan
-    df["has_fundamentals"] = 0
-    df["fundamental_gap_days"] = np.nan
-    df["has_reporting_lag"] = 0
-    df["financials_stale_flag"] = 0
-
-    last_row = None
-    last_date = None
-    for i, d in enumerate(df["date"]):
-        valid_rows = fin[fin["report_date"] <= d]
-        if not valid_rows.empty:
-            latest = valid_rows.iloc[-1]
-            df.at[i, "pe_ratio"] = latest.get("pe_ratio")
-            df.at[i, "eps"] = latest.get("diluted_earnings_per_share", latest.get("basic_earnings_per_share"))
-            df.at[i, "dividend_yield"] = latest.get("dividend_yield")
-            df.at[i, "has_fundamentals"] = 1
-
-            if last_row is not None:
-                growth = (latest.get("revenues", 0) - last_row.get("revenues", 0)) / last_row.get("revenues", 1)
-                df.at[i, "revenue_growth"] = growth
-                df.at[i, "fundamental_gap_days"] = (latest["report_date"] - last_date).days
-            last_row = latest
-            last_date = latest["report_date"]
-
-            # Reporting lag
-            filed = latest.get("filed_date") or latest.get("filing_date")
-            if filed:
-                lag = (pd.to_datetime(filed).date() - latest["report_date"]).days
-                df.at[i, "has_reporting_lag"] = 1 if lag > 30 else 0
-
-            # Stale check
-            stale_days = (d - latest["report_date"]).days
-            df.at[i, "financials_stale_flag"] = 1 if stale_days > 90 else 0
-
-    return df
+    except Exception as e:
+        logger.exception(f"<UNK> Failed to enrich with splits from {path}: {e}")
+        logger.error("Traceback", exc_info=True)
+        raise
