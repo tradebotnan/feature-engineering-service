@@ -34,6 +34,8 @@ def load_and_process(market, asset, data, symbol, date, file_path, row_id, all_f
 
         df = read_parquet_to_df(file_path)
         # Ensure the 'timestamp' column is in datetime format
+        # logger.info(
+        #     f"Before conversion, 'timestamp' column format: {df['timestamp'].head()}, dtype: {df['timestamp'].dtype}")
         df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ns", utc=True, errors="coerce")
 
         df = df.sort_values("timestamp").reset_index(drop=True)
