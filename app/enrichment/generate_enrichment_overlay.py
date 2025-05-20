@@ -6,7 +6,6 @@ import numpy as np
 import pandas as pd
 from common.env.env_loader import get_env_variable
 from common.io.parquet_utils import read_parquet_to_df
-from sqlalchemy.sql.coercions import expect
 
 
 def generate_enrichment_overlay(df: pd.DataFrame, market, asset, symbol: str) -> pd.DataFrame:

@@ -112,7 +112,6 @@ def generate_features(df: pd.DataFrame, config: dict, data: str) -> pd.DataFrame
         if "engineered_features" in features_config:
             df = engineered.add_engineered_features(df, features_config["engineered_features"])
 
-
         required_columns = ["symbol", "open", "high", "low", "close", "volume", "timestamp"]
         rows_with_nan = df[df[required_columns].isnull().any(axis=1)]
 
@@ -136,7 +135,6 @@ def generate_features(df: pd.DataFrame, config: dict, data: str) -> pd.DataFrame
 
         # ✅ Drop the rows and reset index
         df = df.dropna(subset=required_columns).reset_index(drop=True)
-
 
         logger.info(f"✅ Features generated: {list(df.columns)}")
         return df
