@@ -22,11 +22,12 @@ logger = setup_logger()
 
 
 @retry(Exception, tries=3, delay=2, backoff=2)
-def load_and_process(market, asset, level, symbol, date, file_path, row_id) -> pd.DataFrame:
+def load_and_process(market, asset, level, symbol, date, file_path, row_id):
     try:
         logger.info(f"🛠️ Starting feature generation for {file_path}")
         df = read_parquet_to_df(file_path)
-
+        if df is None or df.empty:
+            return
         # Ensure timestamps are valid and sorted
         df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ns", utc=True, errors="coerce")
         df = df.dropna(subset=["timestamp"]).sort_values("timestamp").reset_index(drop=True)
@@ -62,13 +63,13 @@ def load_and_process(market, asset, level, symbol, date, file_path, row_id) -> p
         update_feature_status(row_id=row_id, status="completed", path=relative_output_path)
 
         logger.info(f"✅ Completed: {symbol} → {parquet_path}")
-        return df
+        return
 
     except Exception as e:
         logger.error(f"❌ Feature generation failed for {symbol} {date}: {e}")
         logger.error("Traceback:", exc_info=True)
         update_feature_status(symbol=symbol, date=date, level=level, status="error", error_message=str(e))
-        return pd.DataFrame()  # Return empty to signal failure downstream
+        return  # Return empty to signal failure downstream
 
 
 def trim_to_original_time_range(df: pd.DataFrame) -> pd.DataFrame:
