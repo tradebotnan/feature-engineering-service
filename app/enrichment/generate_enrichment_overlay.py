@@ -129,8 +129,14 @@ def enrich_with_fundamentals(df: pd.DataFrame, path: Path) -> pd.DataFrame:
             price = df.at[i, "close"]
 
             df.at[i, "eps"] = eps
-            if pd.notnull(price) and pd.notnull(eps) and eps != 0:
+            # Ensure price and eps are numeric before division
+            if (pd.notnull(price)
+                    and pd.notnull(eps)
+                    and isinstance(price, (int, float, np.number))
+                    and isinstance(eps,(int,float,np.number)) and eps != 0):
                 df.at[i, "pe_ratio"] = price / eps
+            else:
+                df.at[i, "pe_ratio"] = np.nan
 
             if last_row is not None and last_report_date:
                 try:

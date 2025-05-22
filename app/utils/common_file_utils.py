@@ -20,32 +20,32 @@ def get_previous_and_next_file_paths(
     # base_dir / filtered / market / asset / level / symbol / ...
     try:
         base_dir = parent.parents[5]
-        filtered_dir, market, asset = parent.parts[-6], parent.parts[-5], parent.parts[-4]
+        process, market, asset = parent.parts[-6], parent.parts[-5], parent.parts[-4]
     except IndexError as e:
         raise ValueError(f"❌ Unexpected file path structure: {current_file}") from e
 
-    prefix = f"{market}_{asset}_{level}_{symbol}_"
+    prefix = f"{process}_{market}_{asset}_{level}_{symbol}_"
     previous, next_ = [], []
 
     if level == "day":
         current_year = extract_suffix(stem, "%Y")
-        previous = generate_year_paths(base_dir, filtered_dir, market, asset, level, symbol, prefix, current_year, -1,
+        previous = generate_year_paths(base_dir, process, market, asset, level, symbol, prefix, current_year, -1,
                                        window)
-        next_ = generate_year_paths(base_dir, filtered_dir, market, asset, level, symbol, prefix, current_year, +1,
+        next_ = generate_year_paths(base_dir, process, market, asset, level, symbol, prefix, current_year, +1,
                                     window)
 
     elif level == "minute":
         current_ym = extract_suffix(stem, "%Y-%m")
-        previous = generate_month_paths(base_dir, filtered_dir, market, asset, level, symbol, prefix, current_ym, -1,
+        previous = generate_month_paths(base_dir, process, market, asset, level, symbol, prefix, current_ym, -1,
                                         window)
-        next_ = generate_month_paths(base_dir, filtered_dir, market, asset, level, symbol, prefix, current_ym, +1,
+        next_ = generate_month_paths(base_dir, process, market, asset, level, symbol, prefix, current_ym, +1,
                                      window)
 
     elif level == "trades":
         current_ymd = extract_suffix(stem, "%Y-%m-%d")
-        previous = generate_day_paths(base_dir, filtered_dir, market, asset, level, symbol, prefix, current_ymd, -1,
+        previous = generate_day_paths(base_dir, process, market, asset, level, symbol, prefix, current_ymd, -1,
                                       window)
-        next_ = generate_day_paths(base_dir, filtered_dir, market, asset, level, symbol, prefix, current_ymd, +1,
+        next_ = generate_day_paths(base_dir, process, market, asset, level, symbol, prefix, current_ymd, +1,
                                    window)
 
     else:
