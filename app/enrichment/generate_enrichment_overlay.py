@@ -50,10 +50,10 @@ def enrich_with_dividends(df: pd.DataFrame, path: Path) -> pd.DataFrame:
         df["days_since_last_dividend"] = calculate_days_since(df["date"], df["is_dividend_day"])
         df["next_dividend_in_X_days"] = calculate_days_until(df["date"], dividends["ex_date"].unique())
 
-        logger.info("✅ Dividend enrichment applied.")
+        logger.info(f"✅ Dividend enrichment applied. for {path.stem}")
         return df
     except Exception as e:
-        logger.exception(f"❌ Failed to enrich dividends from {path}: {e}")
+        logger.exception(f"❌ Failed to enrich dividends from {path.stem}: {e}")
         return df
 
 

@@ -33,7 +33,7 @@ def update_feature_status(*, symbol: str = None, date: str = None, level: str = 
     filters = {"id": row_id} if row_id else {"symbol": symbol, "date": date, "level": level}
     updates = {
         "status": status,
-        "feature_path": path,
+        "feature_file": str(Path(path).stem),
         "error_message": None if error_message in [None, "none", "None", ""] else error_message,
         "updated_ts": datetime.now()
     }
