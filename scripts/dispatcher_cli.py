@@ -52,13 +52,13 @@ def main():
     for idx, row in manifest.iterrows():
         try:
             symbol = row['symbol']
-            data = row['data']
+            level = row['level']
             market = row['market']
             date = row['date']
             start_date = str(date)
             end_date = str(date)
 
-            input_path = os.path.join(args.feature_engineering_path, data, market, symbol, date.replace('-', '/'))
+            input_path = os.path.join(args.feature_engineering_path, level, market, symbol, date.replace('-', '/'))
 
             # Validate path exists
             if not os.path.exists(input_path):

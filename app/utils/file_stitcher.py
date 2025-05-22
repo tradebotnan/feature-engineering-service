@@ -2,8 +2,8 @@
 
 from pathlib import Path
 from typing import List
-import pandas as pd
 
+import pandas as pd
 from common.io.parquet_utils import read_parquet_to_df
 from common.logging.logger import setup_logger
 
@@ -13,17 +13,17 @@ logger = setup_logger()
 
 
 def stitch_with_previous_and_next(
-    df: pd.DataFrame,
-    current_file: Path,
-    data: str
+        df: pd.DataFrame,
+        current_file: Path,
+        level: str
 ) -> pd.DataFrame:
     """
     Stitch previous and next files to current file for continuity.
     """
-    buffer_size = {"day": 300, "minute": 300, "trades": 300}.get(data, 0)
-    forward_look = 26 if data == "day" else 0
+    buffer_size = {"day": 300, "minute": 300, "trades": 300}.get(level, 0)
+    forward_look = 26 if level == "day" else 0
 
-    prev_files, next_files = get_previous_and_next_file_paths(current_file, data=data, window=2)
+    prev_files, next_files = get_previous_and_next_file_paths(current_file, level=level, window=2)
 
     prev_chunks = collect_buffer_rows(prev_files, direction="prev", rows_needed=buffer_size)
     next_chunks = collect_buffer_rows(next_files, direction="next", rows_needed=forward_look)
@@ -44,7 +44,7 @@ def collect_buffer_rows(files: List[Path], direction: str, rows_needed: int) -> 
     direction: 'prev' (tail) or 'next' (head)
     """
     collected = []
-    iterable = reversed(files) if direction == "prev" else files
+    iterable = reversed(files) if direction == "next" else files
 
     for file in iterable:
         if rows_needed <= 0:

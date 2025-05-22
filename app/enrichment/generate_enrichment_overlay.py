@@ -1,6 +1,7 @@
 # Source file: app/enrichment/generate_enrichment_overlay.py
 
 from pathlib import Path
+
 import numpy as np
 import pandas as pd
 from common.env.env_loader import get_env_variable
@@ -20,7 +21,8 @@ def generate_enrichment_overlay(df: pd.DataFrame, market, asset, symbol: str) ->
         df = enrich_with_dividends(df, base_dir / "dividends" / market / asset / symbol / f"{symbol}_dividends.parquet")
         df = enrich_with_splits(df, base_dir / "splits" / market / asset / symbol / f"{symbol}_splits.parquet")
         df = enrich_with_events(df, base_dir / "events" / market / asset / symbol / f"{symbol}_events.parquet")
-        df = enrich_with_fundamentals(df, base_dir / "financials" / market / asset / symbol / f"{symbol}_financials.parquet")
+        df = enrich_with_fundamentals(df,
+                                      base_dir / "financials" / market / asset / symbol / f"{symbol}_financials.parquet")
 
         df.attrs.update(preserved_attrs)
         return df

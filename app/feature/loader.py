@@ -1,13 +1,14 @@
 # Source file: app/feature/loader.py
 
 from pathlib import Path
+
 import pandas as pd
 from common.config.yaml_loader import load_market_config
 from common.env.env_loader import get_env_variable
 from common.io.parquet_utils import read_parquet_to_df
 from common.io.path_resolver import resolve_feature_output_path, get_group_key_from_filename
 from common.logging.logger import setup_logger
-from common.schema.enums import MarketType, AssetType, DataType
+from common.schema.enums import MarketType, AssetType, LevelType
 from common.utils.retry_utils import retry
 
 from app.enrichment.generate_enrichment_overlay import generate_enrichment_overlay
@@ -21,7 +22,7 @@ logger = setup_logger()
 
 
 @retry(Exception, tries=3, delay=2, backoff=2)
-def load_and_process(market, asset, data, symbol, date, file_path, row_id) -> pd.DataFrame:
+def load_and_process(market, asset, level, symbol, date, file_path, row_id) -> pd.DataFrame:
     try:
         logger.info(f"🛠️ Starting feature generation for {file_path}")
         df = read_parquet_to_df(file_path)
@@ -31,12 +32,12 @@ def load_and_process(market, asset, data, symbol, date, file_path, row_id) -> pd
         df = df.dropna(subset=["timestamp"]).sort_values("timestamp").reset_index(drop=True)
 
         # Stitch buffer if needed
-        df = stitch_with_previous_and_next(df, Path(file_path), data=data)
+        df = stitch_with_previous_and_next(df, Path(file_path), level=level)
 
         # Enrichment, cleaning, feature & label generation
         df = generate_enrichment_overlay(df, market, asset, symbol)
         df = preprocess_dataframe(df)
-        df = generate_features(df, load_market_config(market, asset), data)
+        df = generate_features(df, load_market_config(market, asset), level)
         df = apply_labeling_strategy(df, load_market_config(market, asset))
 
         # Trim to file-specific timestamp range
@@ -46,7 +47,7 @@ def load_and_process(market, asset, data, symbol, date, file_path, row_id) -> pd
             raise ValueError("❌ Generated DataFrame is empty after trimming.")
         # Resolve final output path and write result
         output_path = resolve_feature_output_path(
-            MarketType(market), AssetType(asset), DataType(data),
+            MarketType(market), AssetType(asset), LevelType(level),
             symbol, get_group_key_from_filename(Path(file_path).stem)
         )
         parquet_path = Path(str(output_path) + ".parquet")
@@ -66,7 +67,7 @@ def load_and_process(market, asset, data, symbol, date, file_path, row_id) -> pd
     except Exception as e:
         logger.error(f"❌ Feature generation failed for {symbol} {date}: {e}")
         logger.error("Traceback:", exc_info=True)
-        update_feature_status(symbol=symbol, date=date, data=data, status="error", error_message=str(e))
+        update_feature_status(symbol=symbol, date=date, level=level, status="error", error_message=str(e))
         return pd.DataFrame()  # Return empty to signal failure downstream
 
 

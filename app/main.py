@@ -23,13 +23,13 @@ def process_job(job):
     try:
         symbol = job.symbol
         date = job.date
-        data = job.data
+        level = job.level
         row_id = job.id
         file_path = Path(f"D:\\{str(job.output_path)}")
 
-        logger.info(f"🛠️ Processing feature generation for {symbol} ({data})")
+        logger.info(f"🛠️ Processing feature generation for {symbol} ({level})")
         load_and_process(
-            job.market, job.asset, data,
+            job.market, job.asset, level,
             symbol, str(date), file_path,
             row_id
         )
@@ -44,7 +44,7 @@ def main():
         init_db_session()
         markets = load_env_list("MARKETS")
         assets = load_env_list("ASSETS")
-        datas = load_env_list("DATA_TYPES")
+        levels = load_env_list("LEVELS")
         symbols = load_env_list("SYMBOLS")
         start_date = parse_date(get_env_variable("START_DATE"))
         end_date = parse_date(get_env_variable("END_DATE"))
@@ -52,19 +52,19 @@ def main():
         date_filter = None
 
         if start_date and end_date:
-            if FeatureDispatchLog.data == "trades":
+            if FeatureDispatchLog.level == "trades":
                 date_filter = and_(
                     FeatureDispatchLog.date >= start_date,
                     FeatureDispatchLog.date <= end_date
                 )
-            elif FeatureDispatchLog.data == "minute":
+            elif FeatureDispatchLog.level == "minute":
                 date_filter = and_(
                     FeatureDispatchLog.year >= start_date.year,
                     FeatureDispatchLog.year <= end_date.year,
                     FeatureDispatchLog.month >= start_date.month,
                     FeatureDispatchLog.month <= end_date.month,
                 )
-            elif FeatureDispatchLog.data == "day":
+            elif FeatureDispatchLog.level == "day":
                 date_filter = and_(
                     FeatureDispatchLog.year >= start_date.year,
                     FeatureDispatchLog.year <= end_date.year
@@ -75,7 +75,7 @@ def main():
             FeatureDispatchLog.symbol.in_(symbols),
             FeatureDispatchLog.market.in_(markets),
             FeatureDispatchLog.asset.in_(assets),
-            FeatureDispatchLog.data.in_(datas),
+            FeatureDispatchLog.level.in_(levels),
         )
 
         if date_filter:

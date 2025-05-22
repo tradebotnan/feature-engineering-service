@@ -27,10 +27,10 @@ def write_features(df: pd.DataFrame, feature_path: str) -> bool:
         return False
 
 
-def update_feature_status(*, symbol: str = None, date: str = None, data: str = None,
+def update_feature_status(*, symbol: str = None, date: str = None, level: str = None,
                           row_id: int = None, status: str = "pending",
                           path: str = "", error_message: str = ""):
-    filters = {"id": row_id} if row_id else {"symbol": symbol, "date": date, "data": data}
+    filters = {"id": row_id} if row_id else {"symbol": symbol, "date": date, "level": level}
     updates = {
         "status": status,
         "feature_path": path,

@@ -7,7 +7,7 @@ from common.logging.logger import setup_logger
 # Newly added stubs
 from app.indicators import (
     crosses, sequence_id, time_features,
-    event_flags, fundamentals, accumulation_distribution,
+    accumulation_distribution,
     chaikin_money_flow, ichimoku, donchian_channel
 )
 # Core indicators
@@ -17,7 +17,6 @@ from app.indicators import (
 )
 # ✅ NEW trades module
 from app.indicators import trade_indicators
-from indicators.sentiment import add_sentiment_features
 
 logger = setup_logger()
 
@@ -32,7 +31,7 @@ except ImportError:
     logger.info("ℹ️ TA-Lib not found, using default TA-Library (ta package).")
 
 
-def generate_features(df: pd.DataFrame, config: dict, data: str) -> pd.DataFrame:
+def generate_features(df: pd.DataFrame, config: dict, level: str) -> pd.DataFrame:
     """
     Master feature generation pipeline for feature-engineering-service.
     """
@@ -43,7 +42,7 @@ def generate_features(df: pd.DataFrame, config: dict, data: str) -> pd.DataFrame
         # =====================
         # ✅ Special case: Trades dataset
         # =====================
-        if data == "trades":
+        if level == "trades":
             trades_cfg = features_config.get("trades", {}).get("indicators", {})
             if trades_cfg.get("enabled", False):
                 features_list = trades_cfg.get("features", [])
@@ -91,7 +90,7 @@ def generate_features(df: pd.DataFrame, config: dict, data: str) -> pd.DataFrame
         if "chaikin_money_flow" in features_config:
             df = chaikin_money_flow.add_chaikin_money_flow(df, features_config["chaikin_money_flow"])
 
-        if "ichimoku" in features_config and data == "day":
+        if "ichimoku" in features_config and level == "day":
             df = ichimoku.add_ichimoku_features(df, features_config["ichimoku"])
 
         if "donchian_channel" in features_config:
@@ -123,9 +122,9 @@ def generate_features(df: pd.DataFrame, config: dict, data: str) -> pd.DataFrame
             logger.warning(f"🚨 {len(rows_with_nan)} rows will be dropped due to NaNs.")
 
             # Save to CSV for inspection
-            output_dir = "D:/data/debug_nan_records"
+            output_dir = "D:/level/debug_nan_records"
             os.makedirs(output_dir, exist_ok=True)
-            output_file = os.path.join(output_dir, f"dropped_nan_rows_{data}.csv")
+            output_file = os.path.join(output_dir, f"dropped_nan_rows_{level}.csv")
             rows_with_nan.to_csv(output_file, index=False)
             logger.info(f"📝 Dropped rows saved to: {output_file}")
 

@@ -7,7 +7,7 @@ logger = setup_logger()
 
 
 def preprocess_dataframe(df: pd.DataFrame) -> pd.DataFrame:
-    logger.info("🧹 Cleaning and preprocessing data...")
+    logger.info("🧹 Cleaning and preprocessing level...")
 
     if df.empty:
         logger.warning("⚠️ Received empty DataFrame to preprocess.")
