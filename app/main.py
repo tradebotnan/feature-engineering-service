@@ -1,19 +1,17 @@
 # Source file: app/main.py
 
 import time
-from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
-
-from common.io.path_resolver import get_path_from_file_name
-from sqlalchemy import and_
 
 from common.db.db_writer import fetch_records
 from common.db.session_manager import init_db_session
 from common.env.env_loader import get_env_variable, load_env_list
+from common.io.path_resolver import get_path_from_file_name
 from common.logging.logger import setup_logger
 from common.schema.models import FeatureDispatchLog
 from common.time.date_time import parse_date
 from common.utils.retry_utils import retry
+from sqlalchemy import and_
 
 from app.feature.loader import load_and_process
 
@@ -30,7 +28,6 @@ def process_job(job):
         level = job.level
         row_id = job.id
         file_path = get_path_from_file_name(job.filtered_file).with_suffix(".parquet")
-
 
         logger.info(f"🛠️ Processing feature generation for {symbol} ({level})")
         load_and_process(
