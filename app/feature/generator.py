@@ -96,15 +96,6 @@ def generate_features(df: pd.DataFrame, config: dict, level: str) -> pd.DataFram
         if "donchian_channel" in features_config:
             df = donchian_channel.add_donchian_channel(df, features_config["donchian_channel"])
 
-        # if "sentiment_analysis" in features_config:
-        #     df = add_sentiment_features(df, features_config.get("sentiment_analysis", {}))
-        #
-        # if "event_flags" in features_config:
-        #     df = event_flags.add_event_flags(df, features_config["event_flags"])
-        #
-        # if "fundamentals" in features_config:
-        #     df = fundamentals.add_fundamental_features(df, features_config["fundamentals"])
-
         # =====================
         # ✅ Final engineered features
         # =====================
@@ -113,9 +104,6 @@ def generate_features(df: pd.DataFrame, config: dict, level: str) -> pd.DataFram
 
         required_columns = ["symbol", "open", "high", "low", "close", "volume", "timestamp"]
         rows_with_nan = df[df[required_columns].isnull().any(axis=1)]
-
-        # ✅ Detect rows with any NaN values
-        rows_with_nan = df[df.isna().any(axis=1)]
 
         # ✅ Log and save them if any exist
         if not rows_with_nan.empty:

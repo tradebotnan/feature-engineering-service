@@ -10,6 +10,7 @@ from app.enrichment.dividend_enricher import enrich_with_dividends
 from app.enrichment.event_enricher import enrich_with_events
 from app.enrichment.fundamentals_enricher import enrich_with_fundamentals
 from app.enrichment.split_enricher import enrich_with_splits
+from enrichment.news_enricher import enrich_with_news
 
 logger = setup_logger()
 
@@ -21,12 +22,16 @@ def generate_enrichment_overlay(df: pd.DataFrame, market, asset, symbol: str) ->
 
         df["timestamp"] = pd.to_datetime(df["timestamp"], utc=True, errors="coerce")
         df["date"] = df["timestamp"].dt.date
+        year = df["date"].min().year if not df.empty else None
 
         df = enrich_with_dividends(df, base_dir / "dividends" / market / asset / symbol / f"{symbol}_dividends.parquet")
         df = enrich_with_splits(df, base_dir / "splits" / market / asset / symbol / f"{symbol}_splits.parquet")
         df = enrich_with_events(df, base_dir / "events" / market / asset / symbol / f"{symbol}_events.parquet")
         df = enrich_with_fundamentals(df,
                                       base_dir / "financials" / market / asset / symbol / f"{symbol}_financials.parquet")
+
+        if year:
+            df = enrich_with_news(df, symbol=symbol, year=year, market=market, asset=asset)
 
         df.attrs.update(preserved_attrs)
         return df
