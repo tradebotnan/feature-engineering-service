@@ -23,7 +23,12 @@ def apply_labeling_strategy(df: pd.DataFrame, config: dict) -> pd.DataFrame:
             bins = labels["return_bin"].get("bins", [-1.0, 0.0, 0.5, 1.0])
             df["return_bin"] = pd.cut(df["future_return"], bins=bins, labels=False, include_lowest=True)
 
-        required_columns = ["symbol", "open", "high", "low", "close", "volume", "timestamp"]
+        # Inside apply_labeling_strategy
+        required_columns = ["symbol", "timestamp"]
+        if all(col in df.columns for col in ["open", "high", "low", "close", "volume"]):
+            required_columns += ["open", "high", "low", "close", "volume"]
+        elif all(col in df.columns for col in ["price", "size"]):
+            required_columns += ["price", "size"]
 
         # ✅ Drop the rows and reset index
         df = df.dropna(subset=required_columns).reset_index(drop=True)

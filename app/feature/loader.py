@@ -14,6 +14,7 @@ from common.utils.retry_utils import retry
 from app.enrichment.generate_enrichment_overlay import generate_enrichment_overlay
 from app.feature.writer import write_features, update_feature_status
 from app.utils.file_stitcher import stitch_with_previous_and_next
+from enrichment.enrich_trades import enrich_trades
 from feature.generator import generate_features
 from feature.labeler import apply_labeling_strategy
 from preprocessing.data_preprocessor import preprocess_dataframe
@@ -24,6 +25,8 @@ logger = setup_logger()
 @retry(Exception, tries=3, delay=2, backoff=2)
 def load_and_process(market, asset, level, symbol, date, file_path, row_id):
     try:
+        is_trades = (level == "trades")
+
         logger.info(f"🛠️ Starting feature generation for {file_path}")
         df = read_parquet_to_df(file_path)
         if df is None or df.empty:
@@ -33,10 +36,15 @@ def load_and_process(market, asset, level, symbol, date, file_path, row_id):
         df = df.dropna(subset=["timestamp"]).sort_values("timestamp").reset_index(drop=True)
 
         # Stitch buffer if needed
-        df = stitch_with_previous_and_next(df, Path(file_path), level=level)
+        if not is_trades:
+            df = stitch_with_previous_and_next(df, Path(file_path), level=level)
 
         # Enrichment, cleaning, feature & label generation
-        df = generate_enrichment_overlay(df, market, asset, symbol)
+        if is_trades:
+            df = enrich_trades(df, market, asset, symbol)
+        else:
+            df = generate_enrichment_overlay(df, market, asset, symbol)
+
         df = preprocess_dataframe(df)
         df = generate_features(df, load_market_config(market, asset), level)
         df = apply_labeling_strategy(df, load_market_config(market, asset))
@@ -53,6 +61,8 @@ def load_and_process(market, asset, level, symbol, date, file_path, row_id):
         )
         parquet_path = Path(str(output_path) + ".parquet")
         parquet_path.parent.mkdir(parents=True, exist_ok=True)
+
+        df.drop(columns=["date"], inplace=True)
 
         write_features(df, str(parquet_path))
 
