@@ -1,5 +1,5 @@
 # Source file: app/main.py
-
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from sqlalchemy import and_, or_
 
@@ -88,7 +88,6 @@ def build_query_filter(start_date, end_date, levels, symbols, markets, assets):
 def main():
     try:
         init_db_session()
-
         markets = load_env_list("MARKETS")
         assets = load_env_list("ASSETS")
         levels = load_env_list("LEVELS")
@@ -96,31 +95,38 @@ def main():
         start_date = parse_date(get_env_variable("START_DATE"))
         end_date = parse_date(get_env_variable("END_DATE"))
 
-        query_filter = build_query_filter(start_date, end_date, levels, symbols, markets, assets)
+        logger.info("🚀 Feature worker started. Polling every {} seconds.".format(SLEEP_INTERVAL))
 
-        jobs = fetch_records(FeatureDispatchLog, query_filter, limit=BATCH_SIZE)
+        while True:
+            query_filter = build_query_filter(start_date, end_date, levels, symbols, markets, assets)
+            jobs = fetch_records(FeatureDispatchLog, query_filter, limit=BATCH_SIZE)
 
-        if not jobs:
-            logger.info("🟡 No matching jobs found.")
-            return
+            if not jobs:
+                logger.info("🟡 No matching jobs found. Sleeping...")
+                time.sleep(SLEEP_INTERVAL)
+                continue
 
-        logger.info(f"🚀 Processing {len(jobs)} jobs...")
+            logger.info(f"🚀 Found {len(jobs)} jobs to process...")
 
-        with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-            futures = {
-                executor.submit(process_job, job): job
-                for job in jobs if hasattr(job, "symbol") and hasattr(job, "filtered_file")
-            }
+            with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+                futures = {
+                    executor.submit(process_job, job): job
+                    for job in jobs if hasattr(job, "symbol") and hasattr(job, "filtered_file")
+                }
 
-            for future in as_completed(futures):
-                job = futures[future]
-                try:
-                    future.result()
-                except Exception as e:
-                    logger.error(f"❌ Failed in thread for job {job}: {e}", exc_info=True)
+                for future in as_completed(futures):
+                    job = futures[future]
+                    try:
+                        future.result()
+                    except Exception as e:
+                        logger.error(f"❌ Failed in thread for job {job}: {e}", exc_info=True)
+
+            logger.info(f"⏳ Sleeping for {SLEEP_INTERVAL} seconds before next batch...")
+            time.sleep(SLEEP_INTERVAL)
 
     except Exception as e:
         logger.critical(f"❌ Fatal error during job processing: {e}", exc_info=True)
+
 
 
 if __name__ == "__main__":
