@@ -6,6 +6,7 @@ from typing import List
 import pandas as pd
 from common.io.parquet_utils import read_parquet_to_df
 from common.logging.logger import setup_logger
+from pandas import DataFrame
 
 from utils.common_file_utils import get_previous_and_next_file_paths
 
@@ -16,17 +17,21 @@ def stitch_with_previous_and_next(
         df: pd.DataFrame,
         current_file: Path,
         level: str
-) -> pd.DataFrame:
+) -> DataFrame | None:
     """
     Stitch previous and next files to current file for continuity.
     """
     buffer_size = {"day": 300, "minute": 300, "trades": 300}.get(level, 0)
-    forward_look = 26 if level == "day" else 0
+    forward_look = 26 if level in ["day", "minute", "trades"] else 0
 
     prev_files, next_files = get_previous_and_next_file_paths(current_file, level=level, window=2)
 
     prev_chunks = collect_buffer_rows(prev_files, direction="prev", rows_needed=buffer_size)
     next_chunks = collect_buffer_rows(next_files, direction="next", rows_needed=forward_look)
+
+    if not next_chunks:
+        logger.warning(f"✅ No next files to stitch for {current_file.name}. Returning empty DataFrame.")
+        return None
 
     stitched_df = pd.concat(prev_chunks + [df] + next_chunks, ignore_index=True)
     set_time_range_attrs(stitched_df, df)

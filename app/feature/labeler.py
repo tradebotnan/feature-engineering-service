@@ -12,7 +12,7 @@ def apply_labeling_strategy(df: pd.DataFrame, config: dict) -> pd.DataFrame:
         labels = config.get("labels", {})
 
         if "trend" in labels:
-            horizon = labels["trend"].get("horizon", 1)
+            horizon = labels["trend"].get("horizon")
             df["trend"] = np.where(df["close"].shift(-horizon) > df["close"], 1, 0)
 
         if "future_return" in labels:
@@ -20,7 +20,7 @@ def apply_labeling_strategy(df: pd.DataFrame, config: dict) -> pd.DataFrame:
             df["future_return"] = df["close"].shift(-horizon) / df["close"] - 1
 
         if "return_bin" in labels:
-            bins = labels["return_bin"].get("bins", [-1.0, 0.0, 0.5, 1.0])
+            bins = labels["return_bin"].get("bins")
             df["return_bin"] = pd.cut(df["future_return"], bins=bins, labels=False, include_lowest=True)
 
         # Inside apply_labeling_strategy

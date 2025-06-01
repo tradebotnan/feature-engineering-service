@@ -5,6 +5,7 @@ from pathlib import Path
 import pandas as pd
 from common.config.yaml_loader import load_market_config
 from common.env.env_loader import get_env_variable
+from common.io.model_sanitizer import sanitize_features
 from common.io.parquet_utils import read_parquet_to_df
 from common.io.path_resolver import resolve_feature_output_path, get_group_key_from_filename
 from common.logging.logger import setup_logger
@@ -12,7 +13,7 @@ from common.schema.enums import MarketType, AssetType, LevelType
 from common.utils.retry_utils import retry
 
 from app.enrichment.generate_enrichment_overlay import generate_enrichment_overlay
-from app.feature.writer import write_features, update_feature_status
+from app.feature.writer import save_features, update_feature_status
 from app.utils.file_stitcher import stitch_with_previous_and_next
 from enrichment.enrich_trades import enrich_trades
 from feature.generator import generate_features
@@ -38,6 +39,8 @@ def load_and_process(market, asset, level, symbol, date, file_path, row_id):
         # Stitch buffer if needed
         if not is_trades:
             df = stitch_with_previous_and_next(df, Path(file_path), level=level)
+            if df is None or df.empty:
+                return
 
         # Enrichment, cleaning, feature & label generation
         if is_trades:
@@ -63,8 +66,10 @@ def load_and_process(market, asset, level, symbol, date, file_path, row_id):
         parquet_path.parent.mkdir(parents=True, exist_ok=True)
 
         df.drop(columns=["date"], inplace=True)
-
-        write_features(df, str(parquet_path))
+        raw_features_path = parquet_path.with_name("raw_" + parquet_path.stem).with_suffix(parquet_path.suffix)
+        save_features(df, str(raw_features_path))
+        df = sanitize_features(df, level)
+        save_features(df, str(parquet_path))
 
         relative_output_path = str(parquet_path).replace(
             str(Path(get_env_variable("BASE_DIR")).resolve()), ""

@@ -11,7 +11,7 @@ from common.schema.models import FeatureDispatchLog
 logger = setup_logger()
 
 
-def write_features(df: pd.DataFrame, feature_path: str) -> bool:
+def save_features(df: pd.DataFrame, feature_path: str) -> bool:
     try:
         path = Path(feature_path)
         path.parent.mkdir(parents=True, exist_ok=True)
