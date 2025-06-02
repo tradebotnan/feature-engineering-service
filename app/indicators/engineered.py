@@ -1,10 +1,9 @@
-# app/indicators/engineered.py
+# Source file: app/indicators/engineered.py
 import numpy as np
 import pandas as pd
 from common.logging.logger import setup_logger
 
 logger = setup_logger()
-
 
 def add_engineered_features(df: pd.DataFrame, config: dict) -> pd.DataFrame:
     df = df.copy()
@@ -22,15 +21,7 @@ def add_engineered_features(df: pd.DataFrame, config: dict) -> pd.DataFrame:
             df["log_return"] = np.log(df["close"] / df["close"].shift(1)).replace([-np.inf, np.inf], np.nan)
 
     # =====================
-    # 2. Volatility Features (rolling std dev of returns)
-    # =====================
-    if "volatility" in config:
-        windows = config["volatility"].get("windows", [])
-        for window in windows:
-            df[f"volatility_{window}"] = df["close"].pct_change().rolling(window=window).std()
-
-    # =====================
-    # 3. Trend Strength Features
+    # 2. Trend Strength Features
     # =====================
     if "trend_strength" in config:
         periods = config["trend_strength"].get("periods", [])
@@ -41,7 +32,7 @@ def add_engineered_features(df: pd.DataFrame, config: dict) -> pd.DataFrame:
             df[f"trend_strength_{period}"] = trend_strength
 
     # =====================
-    # 4. Z-Score Features
+    # 3. Z-Score Features
     # =====================
     if "zscore" in config:
         apply_cols = config["zscore"].get("apply_to", [])

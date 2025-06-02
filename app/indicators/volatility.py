@@ -1,7 +1,7 @@
 # Source file: app/indicators/volatility.py
 import pandas as pd
+import numpy as np
 from ta.volatility import AverageTrueRange, BollingerBands
-
 
 def add_volatility_features(df: pd.DataFrame, config: dict) -> pd.DataFrame:
     df = df.copy()
@@ -37,9 +37,18 @@ def add_volatility_features(df: pd.DataFrame, config: dict) -> pd.DataFrame:
     # =========================
     # Engineered volatility
     # =========================
+    vol_cols = []
     if config.get("volatility", {}).get("windows", []):
         for window in config["volatility"]["windows"]:
-            df[f"volatility_{window}"] = df["close"].pct_change().rolling(window=window).std()
+            col = f"volatility_{window}"
+            df[col] = df["close"].pct_change().rolling(window=window).std()
+            vol_cols.append(col)
+
+    # =========================
+    # Volatility Score (mean of all vol windows)
+    # =========================
+    if vol_cols:
+        df["volatility_score"] = df[vol_cols].mean(axis=1).fillna(0.0)
 
     # =========================
     # Z-Score

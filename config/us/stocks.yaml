@@ -21,9 +21,10 @@ features:
     ichimoku: { enabled: true }
 
   volatility_indicators:
-    atr: { periods: [14] }
-    bollinger: { periods: [20], stddev: 2 }
-    true_range_pct: { periods: [14] }
+    atr: { periods: [ 14 ] }
+    bollinger: { periods: [ 20 ], stddev: 2 }
+    true_range_pct: { periods: [ 14 ] }
+    volatility: { windows: [ 5, 10, 21 ] }
 
   volume_indicators:
     obv: { enabled: true }
