@@ -14,6 +14,16 @@ logger = setup_logger()
 def enrich_with_events(df: pd.DataFrame, path: Path) -> pd.DataFrame:
     if not path.exists():
         logger.warning(f"⚠️ Events file missing: {path}")
+        # Add empty columns to the DataFrame
+        empty_columns = [
+            "has_event",
+            "has_ticker_change",
+            "has_merger_or_acquisition",
+            "has_name_change",
+            "days_since_last_event",
+        ]
+        for col in empty_columns:
+            df[col] = None
         return df
 
     try:

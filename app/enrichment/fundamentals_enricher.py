@@ -13,6 +13,7 @@ logger = setup_logger()
 def enrich_with_fundamentals(df: pd.DataFrame, path: Path) -> pd.DataFrame:
     if not path.exists():
         logger.warning(f"⚠️ Fundamentals file missing: {path}")
+        initialize_fundamental_columns(df)
         return df
 
     try:

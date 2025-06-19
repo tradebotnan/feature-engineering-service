@@ -14,8 +14,13 @@ def enrich_with_microstructure(df: pd.DataFrame) -> pd.DataFrame:
     - VWAP over 1s, 5s, 10s rolling windows
     """
     try:
-        if df.empty or "timestamp" not in df.columns or "price" not in df.columns or "size" not in df.columns:
+        required_columns = ["timestamp", "price", "size"]
+        if df.empty or not all(col in df.columns for col in required_columns):
             logger.warning("⚠️ Cannot enrich microstructure: missing timestamp, price, or size columns.")
+            # Add empty columns
+            empty_columns = ["tick_direction", "price_diff", "vwap_1s", "vwap_5s", "vwap_10s"]
+            for col in empty_columns:
+                df[col] = None
             return df
 
         df = df.sort_values("timestamp").copy()

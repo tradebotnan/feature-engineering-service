@@ -28,6 +28,20 @@ def enrich_trades(df: pd.DataFrame, market: str, asset: str, symbol: str) -> pd.
 
         if df.empty or "timestamp" not in df.columns:
             logger.warning(f"⚠️ Skipping enrichment for {symbol} trades: missing timestamp or empty frame.")
+            # Add empty columns
+            empty_columns = [
+                "tick_direction",
+                "price_diff",
+                "vwap_1s",
+                "vwap_5s",
+                "vwap_10s",
+                "micro_price",
+                "tick_imbalance",
+                "trade_count_per_second",
+                "volume_per_second",
+            ]
+            for col in empty_columns:
+                df[col] = None
             return df
 
         # Step 1: Ensure timestamp is timezone-aware UTC

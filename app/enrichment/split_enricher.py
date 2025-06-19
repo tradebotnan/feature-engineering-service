@@ -12,6 +12,10 @@ logger = setup_logger()
 def enrich_with_splits(df: pd.DataFrame, path: Path) -> pd.DataFrame:
     if not path.exists():
         logger.warning(f"⚠️ Splits file missing: {path}")
+        # Add empty columns to the DataFrame
+        empty_columns = ["is_split_day", "split_ratio"]
+        for col in empty_columns:
+            df[col] = None
         return df
 
     try:

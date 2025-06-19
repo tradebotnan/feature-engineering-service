@@ -14,6 +14,14 @@ logger = setup_logger()
 def enrich_with_dividends(df: pd.DataFrame, path: Path) -> pd.DataFrame:
     if not path.exists():
         logger.warning(f"⚠️ Dividend file missing: {path}")
+        empty_columns = [
+            "is_dividend_day",
+            "dividend_amount",
+            "days_since_last_dividend",
+            "next_dividend_in_X_days",
+        ]
+        for col in empty_columns:
+            df[col] = None
         return df
 
     try:

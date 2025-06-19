@@ -19,6 +19,19 @@ def enrich_with_news(df: pd.DataFrame, symbol: str, year: int, market: str = "us
 
         if not file_path.exists():
             logger.warning(f"⚠️ News sentiment file not found for {symbol} {year}: {file_path}")
+            # Add empty columns to the DataFrame
+            empty_columns = [
+                "sentiment_avg",
+                "sentiment_count",
+                "sentiment_std",
+                "sentiment_3d_avg",
+                "sentiment_5d_avg",
+                "sentiment_3d_momentum",
+                "buzz_score_5d",
+                "sentiment_trend_up",
+            ]
+            for col in empty_columns:
+                df[col] = None
             return df
 
         sentiment_df = read_parquet_to_df(file_path)
