@@ -14,7 +14,7 @@ def test_preprocess_dataframe():
         "Low": [1, 2],
         "Close": [1, 2],
         "Volume": [10, 20],
-        "Timestamp": pd.date_range("2024-01-01", periods=2, freq="D"),
+        "Timestamp": pd.date_range("2024-01-01", periods=2, freq="D", tz="UTC"),
     })
     result = preprocess_dataframe(df)
     assert list(result.columns) == ["open", "high", "low", "close", "volume", "timestamp"]

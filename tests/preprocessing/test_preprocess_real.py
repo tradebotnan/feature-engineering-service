@@ -1,4 +1,6 @@
-import pandas as pd
+import pytest
+
+pd = pytest.importorskip("pandas")
 from app.preprocessing.data_preprocessor import preprocess_dataframe
 
 

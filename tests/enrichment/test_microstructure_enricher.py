@@ -1,4 +1,6 @@
-import pandas as pd
+import pytest
+
+pd = pytest.importorskip("pandas")
 from app.enrichment.microstructure_enricher import enrich_with_microstructure
 
 

@@ -12,7 +12,7 @@ except Exception as e:
 
 
 def test_trim_to_original_time_range():
-    df = pd.DataFrame({"timestamp": pd.date_range("2024-01-01", periods=3, freq="D")})
+    df = pd.DataFrame({"timestamp": pd.date_range("2024-01-01", periods=3, freq="D", tz="UTC")})
     df.attrs["current_file_min_ts"] = df["timestamp"].iloc[0]
     df.attrs["current_file_max_ts"] = df["timestamp"].iloc[2]
     result = trim_to_original_time_range(df)
