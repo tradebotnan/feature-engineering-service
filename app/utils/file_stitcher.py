@@ -8,7 +8,7 @@ from common.io.parquet_utils import read_parquet_to_df
 from common.logging.logger import setup_logger
 from pandas import DataFrame
 
-from utils.common_file_utils import get_previous_and_next_file_paths
+from app.utils.common_file_utils import get_previous_and_next_file_paths
 
 logger = setup_logger()
 

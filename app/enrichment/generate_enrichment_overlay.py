@@ -10,7 +10,7 @@ from app.enrichment.dividend_enricher import enrich_with_dividends
 from app.enrichment.event_enricher import enrich_with_events
 from app.enrichment.fundamentals_enricher import enrich_with_fundamentals
 from app.enrichment.split_enricher import enrich_with_splits
-from enrichment.news_enricher import enrich_with_news
+from app.enrichment.news_enricher import enrich_with_news
 
 logger = setup_logger()
 
