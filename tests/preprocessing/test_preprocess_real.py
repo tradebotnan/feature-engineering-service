@@ -4,7 +4,7 @@ from app.preprocessing.data_preprocessor import preprocess_dataframe
 
 def test_preprocess_dataframe_basic():
     df = pd.DataFrame({
-        "timestamp": pd.date_range("2024-01-01", periods=3, freq="H"),
+        "timestamp": pd.date_range("2024-01-01", periods=3, freq="H", tz="UTC"),
         "open": [1, 2, 3],
         "high": [1, 2, 3],
         "low": [1, 2, 3],
