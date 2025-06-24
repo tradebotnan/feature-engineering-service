@@ -1,6 +1,8 @@
 from pathlib import Path
 from unittest.mock import patch
-import pandas as pd
+import pytest
+
+pd = pytest.importorskip("pandas")
 from app.utils.file_stitcher import collect_buffer_rows, set_time_range_attrs
 
 

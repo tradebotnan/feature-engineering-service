@@ -1,4 +1,6 @@
-import pandas as pd
+import pytest
+
+pd = pytest.importorskip("pandas")
 from app.feature.loader import trim_to_original_time_range
 
 

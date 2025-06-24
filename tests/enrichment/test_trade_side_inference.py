@@ -1,4 +1,6 @@
-import pandas as pd
+import pytest
+
+pd = pytest.importorskip("pandas")
 from app.enrichment.trade_side_inference import infer_trade_side
 
 

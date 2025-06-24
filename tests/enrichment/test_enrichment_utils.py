@@ -1,4 +1,6 @@
-import pandas as pd
+import pytest
+
+pd = pytest.importorskip("pandas")
 import math
 from app.enrichment.enrichment_utils import calculate_days_since, calculate_days_until
 

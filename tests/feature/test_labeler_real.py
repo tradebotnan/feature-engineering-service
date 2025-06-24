@@ -1,4 +1,6 @@
-import pandas as pd
+import pytest
+
+pd = pytest.importorskip("pandas")
 from app.feature.labeler import apply_labeling_strategy
 
 

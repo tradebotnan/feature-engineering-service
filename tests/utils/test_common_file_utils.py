@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
-import pandas as pd
+import pytest
+
+pd = pytest.importorskip("pandas")
 from app.utils.common_file_utils import (
     get_previous_and_next_file_paths,
     extract_suffix,
