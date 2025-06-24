@@ -2,7 +2,19 @@
 
 from pathlib import Path
 
-from dotenv import load_dotenv
+import os
+
+try:
+    from dotenv import load_dotenv
+except Exception:  # pragma: no cover - fallback when python-dotenv is missing
+    def load_dotenv(dotenv_path):
+        """Simple .env loader used when python-dotenv is unavailable."""
+        with open(dotenv_path) as fh:
+            for line in fh:
+                if not line.strip() or line.strip().startswith("#"):
+                    continue
+                key, _, value = line.partition("=")
+                os.environ.setdefault(key.strip(), value.strip())
 
 
 def pytest_configure():
