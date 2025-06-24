@@ -17,6 +17,7 @@ ta = "^0.11.0"
 pyyaml = "^6.0.2"
 matplotlib = "^3.10.3"
 common-utils = { path = "../common-utils", develop = true }
+pytest-env = "^1.1.5"
 
 [tool.poetry.group.dev.dependencies]
 pytest-mock = "^3.10"
@@ -30,7 +31,6 @@ anyio = "^4.3.0"
 
 [tool.pytest.ini_options]
 env_files = [".env"]
-
 [tool.poetry.scripts]
 feature-engineering = "app.main:main"
 
