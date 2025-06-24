@@ -14,7 +14,8 @@ def test_collect_buffer_rows(tmp_path):
         f.touch()
     with patch("app.utils.file_stitcher.read_parquet_to_df", dummy_reader):
         chunks = collect_buffer_rows(files, "prev", rows_needed=2)
-    assert len(chunks) == 2
+    assert len(chunks) == 1
+    assert len(chunks[0]) == 2
 
 
 def test_set_time_range_attrs():
