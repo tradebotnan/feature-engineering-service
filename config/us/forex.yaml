@@ -1,0 +1,50 @@
+features:
+  enabled: true
+  version: v2.0
+  asset_class: forex
+
+  momentum_indicators:
+    rsi: { periods: [14] }
+    roc: { periods: [10] }
+    adx: { periods: [14] }
+    cci: { periods: [14] }
+    stochastic: { periods: [14] }
+
+  trend_indicators:
+    sma: { periods: [5, 10, 20, 50, 100, 200] }
+    ema: { periods: [10, 20, 50, 100] }
+    macd: { enabled: true }
+    trix: { periods: [15] }
+    vortex: { periods: [14] }
+    donchian_channel: { periods: [20] }
+
+  volatility_indicators:
+    atr: { periods: [14] }
+    bollinger: { periods: [20], stddev: 2 }
+
+  candle_features:
+    patterns: { enabled: true }
+    engineered.py:
+      include: ["body_size", "wick_size"]
+
+  sentiment_analysis:
+    enabled: false
+
+  engineered_features:
+    return:
+      include: ["return_1d", "return_5d", "log_return"]
+    volatility:
+      windows: [5, 10, 21]
+    trend_strength:
+      periods: [10, 20]
+    zscore:
+      apply_to: ["close", "rsi_14"]
+
+  labels:
+    trend: { horizon: 1 }
+    return_bin: { bins: [-1.0, 0.0, 0.5, 1.0] }
+    future_return: { horizon: 1 }
+
+  trades:
+    indicators:
+      enabled: false

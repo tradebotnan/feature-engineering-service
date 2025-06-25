@@ -1,0 +1,96 @@
+features:
+  enabled: true
+  version: v2.0
+  asset_class: stocks
+
+  momentum_indicators:
+    rsi: { periods: [14] }
+    roc: { periods: [10] }
+    adx: { periods: [14] }
+    cci: { periods: [14] }
+    stochastic: { periods: [14] }
+
+  trend_indicators:
+    sma: { periods: [5, 10, 20, 50, 100, 200, 250] }
+    ema: { periods: [10, 20, 50, 100, 200] }
+    wma: { periods: [20] }
+    macd: { enabled: true }
+    trix: { periods: [15] }
+    vortex: { periods: [14] }
+    donchian_channel: { periods: [20] }
+    ichimoku: { enabled: true }
+
+  volatility_indicators:
+    atr: { periods: [ 14 ] }
+    bollinger: { periods: [ 20 ], stddev: 2 }
+    true_range_pct: { periods: [ 14 ] }
+    volatility: { windows: [ 5, 10, 21 ] }
+
+  volume_indicators:
+    obv: { enabled: true }
+    mfi: { periods: [14] }
+    accumulation_distribution: { enabled: true }
+    chaikin_money_flow: { periods: [20] }
+    volume_roc: { periods: [10] }
+    vwap: { enabled: true }
+    price_vwap_ratio: { enabled: true }
+
+  options_indicators:
+    enabled: false
+
+  candle_features:
+    patterns:
+      enabled: true
+    include: ["doji", "engulfing"]
+    engineered:
+      include: ["body_size", "wick_size", "gap_up", "gap_down"]
+
+#  sentiment_analysis:
+#    enabled: true
+#    source: [ "news", "social" ]
+#    models: [ "finbert" ]
+#    include_mock_sentiment: true
+#    sentiment_trend:
+#      periods: [3, 5, 10]
+
+  cross_features:
+    include: ["ema_10_vs_ema_50", "sma_20_vs_sma_50"]
+
+  sequence_id:
+    enabled: true
+
+  time_features: {}
+#
+#  event_flags:
+#    enabled: true
+#    types: ["earnings", "dividend", "splits"] # Missing
+#
+#  fundamentals:
+#    include: ["pe_ratio", "eps", "dividend_yield", "revenue_growth"] # Missing
+
+  engineered_features:
+    return:
+      include: ["return_1d", "return_5d", "log_return"]
+    volatility:
+      windows: [5, 10, 21]
+    trend_strength:
+      periods: [10, 20]
+    zscore:
+      apply_to: ["close", "rsi_14"]
+
+  labels:
+    trend: { horizon: 1 }
+    return_bin: { bins: [-1.0, 0.0, 0.5, 1.0] }
+    future_return: { horizon: 1 }
+
+  trades:
+    indicators:
+      enabled: true
+      features:
+        - micro_price
+        - tick_imbalance
+        - trade_count_per_second
+        - volume_per_second
+#event_earnings, event_dividend, event_splits → always false (or default 0)
+#pe_ratio, eps, dividend_yield, revenue_growth → never populated
+#sentiment_score, sentiment_positive, sentiment_negative, sentiment_trend_X → random numbers

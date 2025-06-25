@@ -1,12 +1,11 @@
 import argparse
-import pandas as pd
-import subprocess
 import os
-import logging
+import subprocess
 
-# Setup logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s:%(message)s')
-logger = logging.getLogger(__name__)
+import pandas as pd
+from common.logging.logger import setup_logger
+
+logger = setup_logger()
 
 
 def run_feature_engineering(input_path, output_dir, symbol, start_date, end_date):
@@ -24,6 +23,7 @@ def run_feature_engineering(input_path, output_dir, symbol, start_date, end_date
         logger.info(f"Success: {symbol} {start_date}")
     except subprocess.CalledProcessError as e:
         logger.error(f"Failed Feature Engineering for {symbol} {start_date}: {e}")
+        logger.error("Traceback:", exc_info=True)
 
 
 def main():
@@ -41,22 +41,24 @@ def main():
             manifest = pd.read_parquet(args.manifest)
         else:
             logger.error("Unsupported manifest file type. Use CSV or Parquet.")
+            logger.error("Traceback:", exc_info=True)
             return
     except Exception as e:
         logger.error(f"Error loading manifest file: {e}")
+        logger.error("Traceback:", exc_info=True)
         return
 
     # Dispatch each file
     for idx, row in manifest.iterrows():
         try:
             symbol = row['symbol']
-            data_type = row['data_type']
+            level = row['level']
             market = row['market']
             date = row['date']
             start_date = str(date)
             end_date = str(date)
 
-            input_path = os.path.join(args.feature_engineering_path, data_type, market, symbol, date.replace('-', '/'))
+            input_path = os.path.join(args.feature_engineering_path, level, market, symbol, date.replace('-', '/'))
 
             # Validate path exists
             if not os.path.exists(input_path):
@@ -68,6 +70,7 @@ def main():
 
         except Exception as e:
             logger.error(f"Error dispatching file idx {idx}: {e}")
+            logger.error("Traceback:", exc_info=True)
 
 
 if __name__ == "__main__":

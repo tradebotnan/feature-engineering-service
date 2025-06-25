@@ -1,0 +1,47 @@
+features:
+  enabled: true
+  version: v1.0
+  asset_class: options
+
+  price_indicators:
+    # Trend
+    sma: { periods: [5, 10, 20, 50] }
+    ema: { periods: [5, 10, 21] }
+    macd: { enabled: true }
+
+    # Momentum
+    rsi: { periods: [14] }
+
+    # Volatility
+    atr: { periods: [14] }
+    bollinger: { periods: [20], stddev: 2 }
+
+  options_indicators:
+    iv: { enabled: true }
+    delta: { enabled: true }
+    gamma: { enabled: true }
+    theta: { enabled: true }
+    vega: { enabled: true }
+    iv_rank: { enabled: true }
+    iv_percentile: { enabled: true }
+    skew: { call_put_ratio: true }
+
+  candle_features:
+    engineered: { include: ["body_size", "gap_up"] }
+
+  engineered_features:
+    return:
+      include: ["return_1d", "return_5d"]
+    volatility:
+      windows: [5, 10]
+    trend_strength:
+      periods: [10]
+
+  labels:
+    trend: { horizon: 1 }
+    implied_volatility_bin: { bins: [0.2, 0.4, 0.6] }
+    future_return: { horizon: 1 }
+
+  trades:
+    indicators:
+      enabled: false
