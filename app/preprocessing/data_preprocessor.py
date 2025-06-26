@@ -17,17 +17,30 @@ def preprocess_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     df.columns = [col.lower().strip() for col in df.columns]
 
     # ✅ New (recommended) → force numeric types
-    numeric_columns = ["open", "high", "low", "close", "volume"]
+    numeric_columns = [
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+        "price",
+        "size",
+    ]
     for col in numeric_columns:
         if col in df.columns:
             df[col] = pd.to_numeric(df[col], errors="coerce")
+
+    # Drop non-numeric trade metadata if present
+    df.drop(columns=["conditions"], inplace=True, errors="ignore")
 
     # Drop rows with missing essentials
     df = df.dropna(subset=[col for col in numeric_columns if col in df.columns])
 
     # Format timestamp
     if "timestamp" in df.columns:
-        df["timestamp"] = pd.to_datetime(df["timestamp"]).dt.tz_convert("America/New_York")
+        df["timestamp"] = pd.to_datetime(df["timestamp"]).dt.tz_convert(
+            "America/New_York"
+        )
         df = df.sort_values("timestamp")
 
     logger.info("✅ Data cleaning completed.")
